@@ -51,4 +51,4 @@ If this policy changes, the new version will be published with the update, and a
 
 ## Contact
 
-Questions: [add a support email or website before publishing]
+Questions or requests: open an issue at <https://github.com/Sonal-Jaiswal/Brewtab/issues>.
