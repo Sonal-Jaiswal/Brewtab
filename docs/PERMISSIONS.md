@@ -6,9 +6,9 @@ These are written so they can be pasted into the Chrome Web Store **Privacy prac
 
 | Permission | Install warning | Justification |
 | --- | --- | --- |
-| `storage` | None | Saves the user's settings locally. |
-| `alarms` | None | Ends focus phases, applies scheduled blocking at the right time and resets daily limits at midnight, even after the service worker is suspended or Chrome restarts. |
-| `declarativeNetRequest` | "Block content on any page" | ScrollStop blocks only the sites the user adds to their blocklist, using dynamic rules applied by Chrome. Brewtab doesn't read or modify network traffic. |
+| `storage` | None | Saves the user's settings (theme, search choice, blocklist, schedules and daily limits) and the state of a running focus session on the user's device. Nothing is sent anywhere. |
+| `alarms` | None | Ends focus and break phases on time, turns scheduled blocking on and off at the right moment, counts screen time once a minute and resets daily limits at midnight, even after the service worker is suspended or Chrome restarts. |
+| `declarativeNetRequest` | "Block content on any page" | ScrollStop blocks only the sites the user adds to their blocklist, using dynamic rules applied by Chrome to top-level page loads, and only during focus sessions, schedules, or when the user turns on "Block all the time". Brewtab doesn't read or modify network traffic. |
 | `activeTab` | None | When the user clicks the toolbar button, lets the popup read the current tab's address so it can offer to add that site to the blocklist and show today's time on it. |
 | `contextMenus` | None | Adds a "ScrollStop: add this site to blocklist" item to the page's right-click menu. |
 | `idle` | None | Pauses screen-time counting when the user is away, so reports aren't inflated. |
@@ -21,7 +21,7 @@ These are written so they can be pasted into the Chrome Web Store **Privacy prac
 | Permission | Install warning | Justification |
 | --- | --- | --- |
 | Host access `*://*/*` | "Read and change all your data on all websites" (shown only when requested) | (1) ScrollStop redirects blocked sites to Brewtab's own blocked page; a DNR redirect requires host access. (2) ScrollStop screen time reads the active tab's domain to total time per site and enforce daily limits. Without this permission, blocking still works through Chrome's standard block page. |
-| `bookmarks` | "Read and change your bookmarks" (shown only when requested) | Read-only use: importing bookmark folders as shortcuts and browsing folders in the Bookmarks widget. Brewtab never modifies bookmarks. |
+| `bookmarks` | "Read and change your bookmarks" (shown only when requested) | Read-only use: importing bookmark folders as shortcuts and browsing folders in the Bookmarks widget. Brewtab never modifies bookmarks. It's optional and requested only when the user imports bookmarks or adds the Bookmarks widget. |
 
 ## Not requested
 
@@ -37,11 +37,15 @@ All executable code is packaged in the extension. There is no `eval`, `new Funct
 
 ## Data use declarations (Developer Dashboard)
 
-- **Does the extension collect or use user data?**
-  - **Website content:** not collected. Brewtab never reads or changes the content of web pages.
-  - **Web history:** domain-level screen-time totals are stored on the device for the user-facing ScrollStop reports and limits, and are never transmitted. Declare "Web history" as handled locally if the dashboard asks about on-device processing. Otherwise, nothing is collected.
-  - **Personal information:** the optional first name for the greeting is stored locally only.
-- **Certifications:**
+Google's [user data FAQ](https://developer.chrome.com/docs/webstore/program-policies/user-data-faq) says extensions must disclose how they handle user data "even when data is processed or stored locally". So, in "What user data do you plan to collect":
+
+- **Tick Personally identifiable information:** the optional first name for the greeting, stored on the device only.
+- **Tick Web history:** ScrollStop screen time stores seconds per website domain per day, on the device only, for the user's own reports and daily limits. Full addresses and page titles aren't stored.
+- **Leave the rest unticked:** health, financial, authentication, personal communications, location, user activity and website content. Brewtab never reads page content or logs clicks or keystrokes. The `idle` permission only tells it whether the computer is in use.
+
+Nothing is ever transmitted. The [privacy policy](PRIVACY_POLICY.md) explains this.
+
+- **Certifications** (tick all three):
   - Data is not sold to third parties.
   - Data is not used or transferred for purposes unrelated to the item's single purpose.
   - Data is not used or transferred to determine creditworthiness or for lending.
