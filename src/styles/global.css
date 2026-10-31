@@ -1,0 +1,219 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter/wght.css';
+@import '@fontsource-variable/fraunces/wght.css';
+
+/* ---------- Design tokens ----------
+   Themes set raw tokens on <html data-theme>. User appearance settings
+   (radius, widget opacity, text colour) override them at runtime. */
+
+:root {
+  --bt-field: color-mix(in oklab, var(--bt-surface-base) 70%, transparent);
+  --bt-radius: 18px;
+  --bt-gap: 20px;
+  --bt-widget-alpha: 0.86;
+  --bt-blur: 0px;
+  --bt-font-ui: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --bt-font-display: 'Fraunces Variable', 'Iowan Old Style', Georgia, serif;
+  --bt-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  color-scheme: light;
+}
+
+:root,
+[data-theme='minimal-light'] {
+  --bt-bg: #f5f1ea;
+  --bt-bg-image: radial-gradient(1200px 600px at 15% -10%, #fbe9d6 0%, transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, #ece6f5 0%, transparent 55%);
+  --bt-surface-base: #fffdf9;
+  --bt-fg: #221d18;
+  --bt-muted: #6f665d;
+  --bt-line: rgb(34 29 24 / 0.09);
+  --bt-subtle: rgb(34 29 24 / 0.05);
+  --bt-accent: #b4632a;
+  --bt-accent-fg: #fffaf4;
+  --bt-accent-soft: rgb(180 99 42 / 0.12);
+  --bt-danger: #b42318;
+  --bt-success: #2f7a4f;
+  --bt-shadow: 0 1px 2px rgb(34 29 24 / 0.05), 0 8px 24px -12px rgb(34 29 24 / 0.18);
+  --bt-hero-fg: var(--bt-fg);
+  --bt-backdrop: none;
+}
+
+[data-theme='midnight'] {
+  color-scheme: dark;
+  --bt-bg: #0c0f15;
+  --bt-bg-image: radial-gradient(1000px 600px at 80% -10%, #1b2440 0%, transparent 60%),
+    radial-gradient(800px 500px at 0% 110%, #2a1a12 0%, transparent 55%);
+  --bt-surface-base: #151a24;
+  --bt-fg: #ece8e1;
+  --bt-muted: #98a1b0;
+  --bt-line: rgb(236 232 225 / 0.08);
+  --bt-subtle: rgb(236 232 225 / 0.06);
+  --bt-accent: #e7a660;
+  --bt-accent-fg: #1a120a;
+  --bt-accent-soft: rgb(231 166 96 / 0.16);
+  --bt-danger: #f97066;
+  --bt-success: #6fcf97;
+  --bt-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 32px -16px rgb(0 0 0 / 0.7);
+  --bt-hero-fg: var(--bt-fg);
+  --bt-backdrop: none;
+}
+
+[data-theme='nature'] {
+  --bt-bg: #dfe8d9;
+  /* Local, generated landscape — no remote images. */
+  --bt-bg-image: url('../assets/nature.svg');
+  --bt-surface-base: #fbfaf4;
+  --bt-fg: #1d2a1f;
+  --bt-muted: #5b6b5c;
+  --bt-line: rgb(29 42 31 / 0.1);
+  --bt-subtle: rgb(29 42 31 / 0.05);
+  --bt-accent: #3f7a4a;
+  --bt-accent-fg: #f6fbf4;
+  --bt-accent-soft: rgb(63 122 74 / 0.13);
+  --bt-danger: #b42318;
+  --bt-success: #2f7a4f;
+  --bt-shadow: 0 1px 2px rgb(29 42 31 / 0.06), 0 10px 30px -14px rgb(29 42 31 / 0.3);
+  --bt-hero-fg: #fdfcf6;
+  --bt-hero-shadow: 0 1px 2px rgb(20 40 25 / 0.35), 0 2px 18px rgb(20 40 25 / 0.25);
+  --bt-backdrop: none;
+}
+
+[data-theme='glass'] {
+  color-scheme: dark;
+  --bt-bg: #2b2140;
+  --bt-bg-image: radial-gradient(900px 700px at 10% 10%, #ff9a8b 0%, transparent 55%),
+    radial-gradient(800px 700px at 90% 20%, #7f7fd5 0%, transparent 55%),
+    radial-gradient(900px 800px at 50% 110%, #2ec5ce 0%, transparent 55%),
+    linear-gradient(135deg, #3a2a5c, #1f2a48);
+  --bt-surface-base: #ffffff;
+  --bt-widget-alpha-scale: 0.16;
+  --bt-fg: #ffffff;
+  --bt-muted: rgb(255 255 255 / 0.72);
+  --bt-line: rgb(255 255 255 / 0.22);
+  --bt-subtle: rgb(255 255 255 / 0.1);
+  --bt-accent: #ffffff;
+  --bt-accent-fg: #2b2140;
+  --bt-accent-soft: rgb(255 255 255 / 0.18);
+  --bt-danger: #ffb4ab;
+  --bt-success: #b6f2c9;
+  --bt-shadow: 0 8px 32px -8px rgb(20 10 40 / 0.35);
+  --bt-hero-fg: #ffffff;
+  --bt-hero-shadow: 0 1px 12px rgb(30 15 60 / 0.25);
+  --bt-field: rgb(255 255 255 / 0.12);
+  --bt-backdrop: blur(18px) saturate(1.4);
+}
+
+:root {
+  --bt-surface: color-mix(in oklab, var(--bt-surface-base) calc(var(--bt-widget-alpha) * var(--bt-widget-alpha-scale, 1) * 100%), transparent);
+  --bt-surface-solid: color-mix(in oklab, var(--bt-surface-base) 97%, var(--bt-fg));
+}
+
+@theme inline {
+  --color-bg: var(--bt-bg);
+  --color-surface: var(--bt-surface);
+  --color-solid: var(--bt-surface-solid);
+  --color-fg: var(--bt-fg);
+  --color-muted: var(--bt-muted);
+  --color-line: var(--bt-line);
+  --color-subtle: var(--bt-subtle);
+  --color-accent: var(--bt-accent);
+  --color-accent-fg: var(--bt-accent-fg);
+  --color-accent-soft: var(--bt-accent-soft);
+  --color-danger: var(--bt-danger);
+  --color-success: var(--bt-success);
+  --radius-card: var(--bt-radius);
+  --radius-ctl: calc(var(--bt-radius) * 0.55);
+  --font-sans: var(--bt-font-ui);
+  --font-display: var(--bt-font-display);
+  --shadow-card: var(--bt-shadow);
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    margin: 0;
+    background: var(--bt-bg);
+    color: var(--bt-fg);
+    font-family: var(--bt-font-ui);
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+  ::selection {
+    background: var(--bt-accent-soft);
+  }
+  :focus-visible {
+    outline: 2px solid var(--bt-accent);
+    outline-offset: 2px;
+  }
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  input,
+  textarea,
+  select {
+    font: inherit;
+    color: inherit;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--bt-line) transparent;
+  }
+}
+
+@layer components {
+  .bt-card {
+    background: var(--bt-surface);
+    border: 1px solid var(--bt-line);
+    border-radius: var(--bt-radius);
+    box-shadow: var(--bt-shadow);
+    backdrop-filter: var(--bt-backdrop);
+  }
+  .bt-popover {
+    background: var(--bt-surface-solid);
+    border: 1px solid var(--bt-line);
+    border-radius: calc(var(--bt-radius) * 0.7);
+    box-shadow: 0 16px 48px -12px rgb(0 0 0 / 0.35);
+  }
+  .bt-tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Motion: restrained, and fully off for reduced-motion users. */
+@keyframes bt-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.bt-enter {
+  animation: bt-fade-in 180ms var(--bt-ease) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion='on']) *,
+  html:not([data-motion='on']) *::before,
+  html:not([data-motion='on']) *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+html[data-motion='off'] *,
+html[data-motion='off'] *::before,
+html[data-motion='off'] *::after {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+}
