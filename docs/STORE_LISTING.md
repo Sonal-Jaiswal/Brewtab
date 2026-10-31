@@ -10,28 +10,29 @@ Requirements were checked on 31 October 2026 against the [image guidelines](http
 
 **Short description** (≤132 characters, used as the manifest description):
 
-> A calm, customisable new-tab dashboard with tasks, notes, focus blocking, site appearance controls and screenshots. Local-only.
+> A calm, customisable new-tab dashboard with tasks, notes, shortcuts and a focus timer that blocks distracting sites. Local-only.
 
 **Category:** Productivity → Workflow & planning
 
 **Detailed description:**
 
 ```
-Brewtab turns every new tab into a calm, focused start: your tasks, notes and shortcuts, a clean search bar, and a focus timer, in a design you can make your own.
+Brewtab turns every new tab into a calm, focused start: your tasks, notes and shortcuts, a clean search bar, and a focus timer that keeps distracting sites away while you work, in a design you can make your own.
 
 YOUR DASHBOARD
 • Live clock, greeting and date (12/24-hour, second time zone)
 • Search with Chrome's default engine, Google, Bing, DuckDuckGo or your own
 • Shortcuts with folders, drag-and-drop ordering, custom icons and bookmark import
-• Widgets you can add, remove, resize and rearrange: Tasks, Notes, Focus, Screen time, Bookmarks, Modules, Daily quote
+• Widgets you can add, remove, resize and rearrange: Tasks, Notes, Focus, Screen time, Bookmarks, Daily quote
 • Tasks with due dates, priorities, categories and Today / Overdue / Done views
 • Notes with search, pinning, autosave and Markdown export
 • Four themes (Minimal Light, Midnight, Nature, Glass) plus your own wallpaper, blur, transparency, corner radius and spacing
 
-FOCUS TOOLS (optional modules, each can be turned off)
-• ScrollStop: block distracting sites always, on a schedule or during focus sessions. URL patterns, an allowlist, daily time limits and weekly screen-time reports.
-• NightShift: dark mode, brightness, contrast, warmth, text size and typeface for any website, with per-site settings, exclusions, a schedule and a distraction-free reading mode.
-• SnapPage: capture the visible area, a region or a full page, then crop, resize, blur sensitive details, add arrows, shapes, text and highlights, and export or copy.
+STAY FOCUSED WITH SCROLLSTOP (optional, can be turned off)
+• A focus timer with work and break cycles that blocks your distracting sites while you work
+• Block sites all the time or on a schedule, with URL patterns and an allowlist
+• Daily time limits per site
+• Weekly screen-time reports, kept on your device
 
 PRIVATE BY DESIGN
 • No account, no servers, no analytics, no ads
@@ -43,16 +44,11 @@ Free. Keyboard-friendly. Respects reduced-motion settings.
 
 ## Single-purpose statement (Privacy practices tab)
 
-> Brewtab's single purpose is to help users stay focused and organised while browsing. It provides a productivity new-tab dashboard (tasks, notes, shortcuts, focus timer) and tightly related focus aids: blocking distracting sites during focus time, reducing eye strain on sites, and capturing reference screenshots for tasks and notes. Each aid is optional and can be disabled.
+> Brewtab's single purpose is to help users stay focused and organised from the new tab page. It replaces the new tab with a productivity dashboard (tasks, notes, shortcuts, focus timer) and includes ScrollStop, which blocks the distracting sites the user chooses during focus sessions, on a schedule or all the time. ScrollStop is optional and can be turned off.
 
-### ⚠️ Review risk to decide on before submitting
+### Single-purpose decision
 
-Chrome's policy says unrelated functionality should be split into separate extensions. ScrollStop (focus blocking) fits the "stay focused" purpose naturally. NightShift and SnapPage are a weaker fit, and a reviewer could treat them as separate products. The options are:
-
-1. **Submit as is,** using the statement above, and respond to reviewer feedback if needed.
-2. **Ship Brewtab with ScrollStop only,** and publish NightShift and SnapPage as separate extensions later. The modules are already isolated in code (`src/modules/*`, `src/content/*`, `src/background/{nightshift,snappage}.ts`), so splitting them out is mostly a build change.
-
-This is the owner's call. Option 2 is the lower-risk path for a first approval.
+Chrome's policy says unrelated functionality should be split into separate extensions. On 31 October 2026 the owner decided to ship Brewtab with the dashboard and ScrollStop only. NightShift (site appearance and reading mode) and SnapPage (screenshots) were removed from this extension, because a reviewer could treat them as separate products. Their last version is at commit `f6f8062`, for publishing as separate extensions later.
 
 The policy also warns against new tab pages that don't respect the user's search settings. Brewtab defaults to **Chrome default** search through the `chrome.search` API, so the user's existing engine is used unless they explicitly pick another.
 
@@ -78,7 +74,7 @@ The screenshots use illustrative demo content generated by `scripts/screenshots.
 - [ ] **Privacy policy URL:** host [PRIVACY_POLICY.md](PRIVACY_POLICY.md) publicly (for example on GitHub Pages) and add a contact address in its Contact section first.
 - [ ] **Support:** add a support email or website.
 - [ ] **Distribution:** public or unlisted, regions, and free (no in-app purchases).
-- [ ] Decide on the single-purpose risk above.
+- [x] Decide on the single-purpose risk: dashboard and ScrollStop only (see above).
 - [ ] Submit for review. **Owner approval is required; not done.**
 
 ## Publishing a new version

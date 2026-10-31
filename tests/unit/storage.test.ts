@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_SETTINGS, getSettings, migrateSettings, updateSettings } from '@/storage/chrome-storage/settings';
-import { notesRepo, tasksRepo, usageRepo, capturesRepo, dashboardRepo } from '@/storage/indexeddb/repos';
+import { notesRepo, tasksRepo, usageRepo, dashboardRepo } from '@/storage/indexeddb/repos';
 import { clearAllData, createBackup, importBackup, parseBackup } from '@/storage/backup';
 import { backupsRepo } from '@/storage/indexeddb/repos';
 import { resetDBConnection } from '@/storage/indexeddb/db';
@@ -90,18 +90,6 @@ describe('usage repository', () => {
     expect(await usageRepo.forRange('2026-10-29', '2026-10-31')).toHaveLength(2);
     await usageRepo.pruneBefore('2026-10-31');
     expect(await usageRepo.forRange('2026-01-01', '2026-12-31')).toHaveLength(1);
-  });
-});
-
-describe('captures repository', () => {
-  it('prunes captures beyond the retention limit', async () => {
-    for (let i = 0; i < 4; i++) {
-      await capturesRepo.add(
-        { id: `c${i}`, createdAt: i, url: '', title: '', kind: 'visible', width: 1, height: 1, crop: null, note: null, blob: new Blob(['x']) },
-        2,
-      );
-    }
-    expect((await capturesRepo.list()).map((c) => c.id)).toEqual(['c3', 'c2']);
   });
 });
 

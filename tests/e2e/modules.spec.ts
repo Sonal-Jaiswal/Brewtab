@@ -25,12 +25,28 @@ test.describe('ScrollStop', () => {
     await page.goto(`${FIXTURE}/article`).catch(() => undefined);
     await expect(page).toHaveURL(/blocked\.html\?reason=always#http:\/\/localhost:4599\/article/);
     await expect(page.getByRole('heading', { name: 'localhost is on pause' })).toBeVisible();
+    const opened = context.waitForEvent('page');
+    await page.getByRole('button', { name: 'ScrollStop settings' }).click();
+    await expect((await opened).getByRole('heading', { level: 1, name: 'ScrollStop' })).toBeVisible();
 
     await settings.bringToFront();
     await settings.getByRole('button', { name: 'Remove localhost' }).click();
     await expect.poll(async () => (await dynamicRules(sw)).length).toBe(0);
     await page.goto(`${FIXTURE}/article`);
     await expect(page.getByRole('heading', { name: 'Fixture /article' })).toBeVisible();
+  });
+
+  test('clicking a link to a blocked site on another site opens the blocked page', async ({ context, sw }) => {
+    await patchSettings(sw, { onboarded: true, scrollstop: { alwaysOn: true, blocklist: [{ id: 'r', kind: 'domain', value: 'localhost', enabled: true, createdAt: 1 }] } });
+    await settle(sw);
+    const page = await context.newPage();
+    await page.goto('http://127.0.0.1:4599/start');
+    await page.evaluate((href) => document.querySelector('main')!.insertAdjacentHTML('afterbegin', `<a id="go" href="${href}">go</a>`), `${FIXTURE}/article`);
+    // Unlike a typed address, a link click is started by the page, so Chrome checks
+    // that the extension page it is redirected to is web accessible.
+    await page.locator('#go').click();
+    await expect(page).toHaveURL(/blocked\.html\?reason=always/);
+    await expect(page.getByRole('heading', { name: 'localhost is on pause' })).toBeVisible();
   });
 
   test('URL patterns and the allowlist', async ({ context, sw }) => {
@@ -141,6 +157,32 @@ test.describe('ScrollStop', () => {
     await expect.poll(async () => (await dynamicRules(sw))[0]?.action.redirect?.regexSubstitution ?? '').toContain('reason=limit');
   });
 
+  test('removing a daily limit unblocks the site straight away', async ({ context, sw, extUrl }) => {
+    await hook(sw, 'addUsage', today(), 'localhost', 90);
+    await patchSettings(sw, { onboarded: true, scrollstop: { limits: [{ id: 'l', domain: 'localhost', minutes: 1, enabled: true }] } });
+    await expect.poll(async () => (await dynamicRules(sw))[0]?.action.redirect?.regexSubstitution ?? '').toContain('reason=limit');
+    const settings = await context.newPage();
+    await settings.goto(extUrl('settings.html#scrollstop'));
+    await settings.getByRole('button', { name: 'Remove limit for localhost' }).click();
+    await expect.poll(async () => (await dynamicRules(sw)).length).toBe(0);
+  });
+
+  test('schedule editor saves, and discards cancelled edits', async ({ context, sw, extUrl }) => {
+    await patchSettings(sw, { onboarded: true });
+    const page = await context.newPage();
+    await page.goto(extUrl('settings.html#scrollstop'));
+    await page.getByRole('button', { name: 'Add schedule' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Schedule' });
+    await dialog.getByRole('button', { name: 'Save schedule' }).click();
+    await expect(page.getByRole('button', { name: 'Edit Work hours' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Edit Work hours' }).click();
+    await dialog.getByLabel('Name').fill('Changed my mind');
+    await dialog.getByRole('button', { name: 'Cancel' }).click();
+    await page.getByRole('button', { name: 'Edit Work hours' }).click();
+    await expect(dialog.getByLabel('Name')).toHaveValue('Work hours');
+  });
+
   test('disabling the module removes all rules', async ({ sw }) => {
     await patchSettings(sw, { scrollstop: { alwaysOn: true, blocklist: [{ id: 'r', kind: 'domain', value: 'example.com', enabled: true, createdAt: 1 }] } });
     await settle(sw);
@@ -149,196 +191,48 @@ test.describe('ScrollStop', () => {
     await settle(sw);
     expect(await dynamicRules(sw)).toHaveLength(0);
   });
-});
 
-test.describe('NightShift', () => {
-  const styleCss = (page: import('@playwright/test').Page) => page.evaluate(() => document.getElementById('brewtab-nightshift-style')?.textContent ?? null);
-
-  test('auto-applies dark mode, re-inverts images, survives DOM changes and updates live', async ({ context, sw }) => {
-    await patchSettings(sw, { nightshift: { active: true, autoApply: true } });
-    await hook(sw, 'syncNightShift');
-    const page = await context.newPage();
-    await page.goto(`${FIXTURE}/article`);
-    await expect.poll(() => styleCss(page)).toContain('invert(1)');
-    expect(await page.evaluate(() => getComputedStyle(document.documentElement).filter)).toContain('invert(1)');
-    expect(await page.evaluate(() => getComputedStyle(document.getElementById('pic')!).filter)).toContain('invert(1)');
-
-    // Dynamically added content + SPA-style head replacement.
-    await expect(page.locator('#late')).toBeVisible();
-    await page.evaluate(() => document.getElementById('brewtab-nightshift-style')!.remove());
-    await expect.poll(() => styleCss(page)).toContain('invert(1)');
-
-    // Per-site override: disable on localhost → removed without reload.
-    await patchSettings(sw, { nightshift: { sites: { localhost: { disabled: true } } } });
-    await expect.poll(() => styleCss(page)).toBeNull();
-
-    // Per-site prefs: re-enable with larger text and no dark mode.
-    await patchSettings(sw, { nightshift: { sites: { localhost: { disabled: false, prefs: { dark: false, fontScale: 130 } } } } });
-    await expect.poll(() => styleCss(page)).toContain('font-size: 130%');
-    expect(await styleCss(page)).not.toContain('invert');
-
-    // Excluding the site wins.
-    await patchSettings(sw, { nightshift: { excluded: ['localhost'] } });
-    await expect.poll(() => styleCss(page)).toBeNull();
-  });
-
-  test('leaves already-dark pages un-inverted', async ({ context, sw }) => {
-    await patchSettings(sw, { nightshift: { active: true, autoApply: true, global: { brightness: 90 } } });
-    await hook(sw, 'syncNightShift');
-    const page = await context.newPage();
-    await page.goto(`${FIXTURE}/dark`);
-    await expect.poll(() => styleCss(page)).toContain('brightness(0.9)');
-    expect(await styleCss(page)).not.toContain('invert');
-  });
-
-  test('turning the module off removes styles and unregisters the script', async ({ context, sw }) => {
-    await patchSettings(sw, { nightshift: { active: true, autoApply: true } });
-    await hook(sw, 'syncNightShift');
-    const page = await context.newPage();
-    await page.goto(FIXTURE);
-    await expect.poll(() => styleCss(page)).not.toBeNull();
-    await patchSettings(sw, { modules: { nightshift: false } });
-    await expect.poll(() => styleCss(page)).toBeNull();
-    await hook(sw, 'syncNightShift');
-    expect(await sw.evaluate(() => chrome.scripting.getRegisteredContentScripts())).toHaveLength(0);
-  });
-
-  test('reading mode opens an isolated reader view and toggles closed', async ({ context, sw }) => {
-    const page = await context.newPage();
-    await page.goto(`${FIXTURE}/long-read`);
-    const tabId = await sw.evaluate(async () => (await chrome.tabs.query({ url: 'http://localhost:4599/long-read' }))[0].id!);
-    await sw.evaluate((id) => chrome.scripting.executeScript({ target: { tabId: id }, files: ['content/reader.js'] }), tabId);
-    await expect(page.locator('[data-brewtab-reader]')).toHaveCount(1);
-    await page.keyboard.press('Escape');
-    await expect(page.locator('[data-brewtab-reader]')).toHaveCount(0);
-    // The site's own localStorage is untouched.
-    expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
-  });
-});
-
-test.describe('SnapPage', () => {
-  test('captures the visible area and opens the editor', async ({ context, sw }) => {
-    const page = await context.newPage();
-    await page.goto(`${FIXTURE}/capture`);
-    await page.bringToFront();
-    const tabId = await sw.evaluate(async () => (await chrome.tabs.query({ url: 'http://localhost:4599/capture' }))[0].id!);
-    const editorPromise = context.waitForEvent('page');
-    let error: string | null = null;
-    await hook(sw, 'captureVisible', tabId).catch((e: Error) => (error = e.message));
-    test.skip(!!error && /permission|activeTab|<all_urls>/i.test(error), `captureVisibleTab needs a user gesture (activeTab) in this environment: ${error}`);
-    expect(error).toBeNull();
-    const editor = await editorPromise;
-    await expect(editor.getByTestId('editor-canvas')).toBeVisible();
-  });
-
-  test('editor: annotate, undo/redo, crop, resize and export PNG + JPEG', async ({ context, sw, extUrl }) => {
-    await patchSettings(sw, { onboarded: true });
-    const page = await context.newPage();
-    await page.goto(extUrl('snappage.html'));
-    const png = await page.evaluate(async () => {
-      const c = new OffscreenCanvas(800, 500);
-      const x = c.getContext('2d')!;
-      x.fillStyle = '#dde';
-      x.fillRect(0, 0, 800, 500);
-      x.fillStyle = '#333';
-      x.font = '40px sans-serif';
-      x.fillText('Secret 1234', 100, 200);
-      return [...new Uint8Array(await (await c.convertToBlob()).arrayBuffer())];
-    });
-    await page.locator('input[type=file]').setInputFiles({ name: 'sample.png', mimeType: 'image/png', buffer: Buffer.from(png) });
-    const canvas = page.getByTestId('editor-canvas');
-    await expect(canvas).toBeVisible();
-    await expect(page.getByText('800 × 500px')).toBeVisible();
-
-    const box = (await canvas.boundingBox())!;
-    const at = (fx: number, fy: number) => [box.x + box.width * fx, box.y + box.height * fy] as const;
-    const drag = async (a: readonly [number, number], b: readonly [number, number]) => {
-      await page.mouse.move(...a);
-      await page.mouse.down();
-      await page.mouse.move(...b, { steps: 5 });
-      await page.mouse.up();
-    };
-
-    const pixel = (x: number, y: number) => canvas.evaluate((el: HTMLCanvasElement, [px, py]) => [...el.getContext('2d')!.getImageData(px, py, 1, 1).data], [x, y]);
-    const before = await pixel(400, 50);
-
-    await page.getByRole('button', { name: /Rectangle/ }).click();
-    await drag(at(0.4, 0.1), at(0.7, 0.3));
-    await page.getByRole('button', { name: /^Arrow/ }).click();
-    await drag(at(0.1, 0.8), at(0.3, 0.6));
-    await page.getByRole('button', { name: /Blur/ }).click();
-    await drag(at(0.1, 0.3), at(0.5, 0.45));
-    await page.getByRole('button', { name: /^Text/ }).click();
-    await page.mouse.click(...at(0.6, 0.7));
-    await page.getByLabel('Annotation text').fill('Look here');
-    await page.getByLabel('Annotation text').press('Enter');
-
-    const undo = page.getByRole('button', { name: /^Undo/ });
-    const redo = page.getByRole('button', { name: /^Redo/ });
-    await expect(undo).toBeEnabled();
-    await undo.click();
-    await undo.click();
-    await undo.click();
-    await undo.click();
-    expect(await pixel(400, 50)).toEqual(before);
-    await expect(undo).toBeDisabled();
-    await redo.click();
-    expect(await pixel(400, 50)).not.toEqual(before);
-
-    await page.getByRole('button', { name: /^Crop/ }).click();
-    await drag(at(0.25, 0.2), at(0.75, 0.8));
-    await expect(page.getByText(/^400 × 300px$/)).toBeVisible();
-
-    await page.getByRole('button', { name: 'Resize' }).click();
-    await page.getByRole('dialog', { name: 'Resize image' }).getByRole('spinbutton').first().fill('200');
-    await page.getByRole('button', { name: 'Apply' }).click();
-    await expect(page.getByText(/^200 × 150px$/)).toBeVisible();
-
-    const [pngDl] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Save PNG' }).click()]);
-    expect(pngDl.suggestedFilename()).toMatch(/\.png$/);
-    const pngBuf = Buffer.from(await (await import('node:fs/promises')).readFile((await pngDl.path())!));
-    expect(pngBuf.readUInt32BE(16)).toBe(200);
-    expect(pngBuf.readUInt32BE(20)).toBe(150);
-
-    const [jpgDl] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'JPEG' }).click()]);
-    expect(jpgDl.suggestedFilename()).toMatch(/\.jpg$/);
-
-    // Library lists the image and it can be deleted.
-    await page.getByRole('button', { name: 'Back to library' }).click();
-    await expect(page.getByRole('button', { name: 'Edit sample.png' })).toBeVisible();
-    await page.getByRole('button', { name: 'Delete screenshot' }).click();
-    await expect(page.getByText('No screenshots yet')).toBeVisible();
-  });
-
-  test('full-page capture stitches a long page', async ({ context, sw }) => {
-    const page = await context.newPage();
-    await page.setViewportSize({ width: 1000, height: 700 });
-    await page.goto(`${FIXTURE}/long`);
-    await page.bringToFront();
-    const tabId = await sw.evaluate(async () => (await chrome.tabs.query({ url: 'http://localhost:4599/long' }))[0].id!);
-    let error: string | null = null;
-    const editorPromise = context.waitForEvent('page', { timeout: 30_000 }).catch(() => null);
-    await hook(sw, 'captureFullPage', tabId).catch((e: Error) => (error = e.message));
-    test.skip(!!error && /permission|activeTab|<all_urls>/i.test(error), `captureVisibleTab needs a user gesture (activeTab) in this environment: ${error}`);
-    expect(error).toBeNull();
-    const editor = await editorPromise;
-    const size = await editor!.getByText(/\d+ × \d+px/).textContent();
-    const [w, h] = size!.match(/(\d+) × (\d+)/)!.slice(1).map(Number);
-    expect(h).toBeGreaterThan(w * 2); // much taller than one viewport
-    // Page scroll position restored.
-    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  test('turning ScrollStop off ends a running focus session and clears the badge', async ({ context, sw, extUrl }) => {
+    const page = await openDashboard(context, sw, extUrl);
+    await page.evaluate(() => chrome.runtime.sendMessage({ type: 'focus:start' }));
+    await expect.poll(() => sw.evaluate(() => chrome.action.getBadgeText({}))).toMatch(/^\d+m$/);
+    await patchSettings(sw, { modules: { scrollstop: false } });
+    await expect.poll(async () => ((await sw.evaluate(async () => (await chrome.storage.local.get('focusState')).focusState)) as { status: string }).status).toBe('idle');
+    await expect.poll(() => sw.evaluate(() => chrome.action.getBadgeText({}))).toBe('');
+    expect(await sw.evaluate(() => chrome.alarms.get('focus-phase'))).toBeFalsy();
   });
 });
 
 test.describe('popup', () => {
-  test('module toggles in the popup update settings', async ({ context, sw, extUrl }) => {
+  test('the ScrollStop toggle in the popup updates settings', async ({ context, sw, extUrl }) => {
     const popup = await context.newPage();
     await popup.goto(extUrl('popup.html'));
-    await popup.getByRole('switch', { name: 'Toggle NightShift' }).click();
-    await expect.poll(async () => ((await sw.evaluate(async () => (await chrome.storage.local.get('settings')).settings)) as { nightshift: { active: boolean } }).nightshift.active).toBe(true);
+    await expect(popup.getByRole('region', { name: 'Focus timer' })).toBeVisible();
     await popup.getByRole('switch', { name: 'Toggle ScrollStop' }).click();
     await expect(popup.getByRole('region', { name: 'Focus timer' })).toHaveCount(0);
-    await expect(popup.getByRole('region', { name: 'SnapPage' })).toBeVisible();
+    await expect.poll(async () => ((await sw.evaluate(async () => (await chrome.storage.local.get('settings')).settings)) as { modules: { scrollstop: boolean } }).modules.scrollstop).toBe(false);
+  });
+
+  test('adds the current site to the blocklist and says when it is blocked', async ({ context, sw, extUrl }) => {
+    await patchSettings(sw, { onboarded: true });
+    const popup = await context.newPage();
+    // A real toolbar click lets the popup read the active site's tab; stand in for it.
+    await popup.addInitScript((url) => {
+      chrome.tabs.query = (async () => [{ id: 1, windowId: 1, index: 0, active: true, url }]) as unknown as typeof chrome.tabs.query;
+    }, `${FIXTURE}/article`);
+    await popup.goto(extUrl('popup.html'));
+    const site = popup.getByRole('region', { name: 'Current site' });
+    await site.getByRole('button', { name: 'Add to blocklist' }).click();
+    await expect(site.getByText('On blocklist')).toBeVisible();
+    await expect(site.getByText('Blocked while you focus or a schedule is on.')).toBeVisible();
+    await expect.poll(async () => ((await sw.evaluate(async () => (await chrome.storage.local.get('settings')).settings)) as { scrollstop: { blocklist: { value: string }[] } }).scrollstop.blocklist.map((r) => r.value)).toEqual(['localhost']);
+
+    // Starting a focus session blocks it now, and the popup says so.
+    await popup.getByRole('region', { name: 'Focus timer' }).getByRole('button', { name: 'Start' }).click();
+    await expect(site.getByText('Blocked now')).toBeVisible();
+    await expect(site.getByText('Blocked while you focus or a schedule is on.')).toHaveCount(0);
+    await site.getByRole('button', { name: 'Remove from blocklist' }).click();
+    await expect(site.getByRole('button', { name: 'Add to blocklist' })).toBeVisible();
   });
 });
 
@@ -409,10 +303,7 @@ test.describe('lifecycle', () => {
       ['search', 'Search'],
       ['appearance', 'Appearance'],
       ['widgets', 'Dashboard'],
-      ['modules', 'Modules'],
       ['scrollstop', 'ScrollStop'],
-      ['nightshift', 'NightShift'],
-      ['snappage', 'SnapPage'],
       ['permissions', 'Permissions'],
       ['data', 'Data & backup'],
       ['about', 'About & privacy'],

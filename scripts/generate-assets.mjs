@@ -44,7 +44,7 @@ font-family:Georgia,'Iowan Old Style',serif;color:#221d18;position:relative;over
   <div style="display:flex;align-items:center;gap:${big ? 18 : 12}px">${svg(big ? 72 : 44)}<span style="font-size:${big ? 54 : 34}px;letter-spacing:-.02em">Brewtab</span></div>
   <div style="font-size:${big ? 38 : 22}px;margin-top:${big ? 22 : 12}px;letter-spacing:-.01em">Start every tab fresh.</div>
   <div style="font:${big ? 20 : 13}px/1.45 -apple-system,'Segoe UI',sans-serif;color:#6f665d;margin-top:${big ? 14 : 8}px;max-width:${big ? 640 : 340}px">
-    Tasks, notes &amp; focus on your new tab · Block distractions · Dark mode for any site · Screenshots &amp; markup. Free, private, local-only.</div>
+    Tasks, notes &amp; shortcuts on your new tab · A focus timer · Block distracting sites · Screen-time reports. Free, private, local-only.</div>
 </div></body></html>`;
 const promo = await chromium.launch();
 const pp = await promo.newPage({ deviceScaleFactor: 1 });

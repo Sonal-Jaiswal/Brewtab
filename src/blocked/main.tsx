@@ -69,7 +69,7 @@ function Blocked() {
           <Button icon={ArrowLeft} onClick={() => (history.length > 1 ? history.back() : location.assign(chrome.runtime.getURL('newtab.html')))}>
             Go back
           </Button>
-          <Button variant="ghost" icon={Settings} onClick={() => void chrome.runtime.openOptionsPage()}>
+          <Button variant="ghost" icon={Settings} onClick={() => void chrome.tabs.create({ url: chrome.runtime.getURL('settings.html#scrollstop') })}>
             ScrollStop settings
           </Button>
         </div>

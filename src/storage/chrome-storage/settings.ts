@@ -25,7 +25,7 @@ export const DEFAULT_SETTINGS: Settings = {
     spacing: 'cozy',
     reduceMotion: 'system',
   },
-  modules: { scrollstop: true, nightshift: true, snappage: true },
+  modules: { scrollstop: true },
   scrollstop: {
     alwaysOn: false,
     blocklist: [],
@@ -36,16 +36,6 @@ export const DEFAULT_SETTINGS: Settings = {
     trackUsage: true,
     blockedMessage: 'This site is blocked right now. Your future self says thanks.',
   },
-  nightshift: {
-    active: false,
-    autoApply: false,
-    skipDarkSites: true,
-    global: { dark: true, brightness: 100, contrast: 100, sepia: 0, fontScale: 100, fontFamily: 'default' },
-    sites: {},
-    excluded: [],
-    schedule: { enabled: false, start: '19:00', end: '07:00' },
-  },
-  snappage: { defaultFormat: 'png', jpegQuality: 0.92, keepRecent: 20 },
 };
 
 /** Bring stored settings of any older version up to the current shape. */
@@ -71,8 +61,6 @@ export function sanitizeSettings(s: Settings): Settings {
   for (const key of ['blocklist', 'allowlist', 'schedules', 'limits'] as const) {
     if (!Array.isArray(s.scrollstop[key])) (s.scrollstop[key] as unknown[]) = [];
   }
-  if (!Array.isArray(s.nightshift.excluded)) s.nightshift.excluded = [];
-  if (!isPlainObject(s.nightshift.sites)) s.nightshift.sites = {};
   const f = s.scrollstop.focus;
   f.workMinutes = num(f.workMinutes, 1, 240, d.scrollstop.focus.workMinutes);
   f.breakMinutes = num(f.breakMinutes, 1, 120, d.scrollstop.focus.breakMinutes);

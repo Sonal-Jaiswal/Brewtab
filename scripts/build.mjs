@@ -1,7 +1,6 @@
-// Builds the extension in three passes:
+// Builds the extension in two passes:
 //  1. Extension pages (React, code-split, ES modules)
 //  2. Service worker (single ES module file — service workers cannot use dynamic import())
-//  3. Content scripts (self-contained IIFE files — content scripts cannot be ES modules)
 import { build } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
@@ -27,14 +26,7 @@ const shared = {
   logLevel: 'warn',
 };
 
-const pages = ['newtab', 'popup', 'settings', 'snappage', 'blocked'];
-
-const contentScripts = {
-  'content/nightshift': 'src/content/nightshift/index.ts',
-  'content/reader': 'src/content/nightshift/reader.ts',
-  'content/region': 'src/content/snappage/region.ts',
-  'content/fullpage': 'src/content/snappage/fullpage.ts',
-};
+const pages = ['newtab', 'popup', 'settings', 'blocked'];
 
 async function run() {
   if (existsSync(outDir) && !watch) rmSync(outDir, { recursive: true, force: true });
@@ -72,19 +64,6 @@ async function run() {
       rollupOptions: { output: { inlineDynamicImports: true } },
     },
   });
-
-  for (const [name, entry] of Object.entries(contentScripts)) {
-    await build({
-      ...shared,
-      build: {
-        outDir,
-        emptyOutDir: false,
-        target: 'chrome116',
-        watch: watch ? {} : null,
-        lib: { entry: resolve(root, entry), formats: ['iife'], name: 'BrewtabContent', fileName: () => `${name}.js` },
-      },
-    });
-  }
 
   cpSync(resolve(root, 'public'), outDir, { recursive: true });
   writeFileSync(resolve(outDir, 'manifest.json'), JSON.stringify(createManifest({ e2e }), null, 2));

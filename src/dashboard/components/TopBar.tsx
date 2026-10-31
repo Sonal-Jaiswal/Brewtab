@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, LayoutDashboard, Moon, Palette, Settings, ShieldBan, Timer } from 'lucide-react';
+import { Check, LayoutDashboard, Palette, Settings, ShieldBan, Timer, type LucideIcon } from 'lucide-react';
 import type { Settings as SettingsT, ThemeId } from '@/shared/types';
 import { useFocusState, useNow } from '@/shared/hooks';
 import { remainingMs } from '@/modules/scrollstop/focus';
@@ -38,7 +38,7 @@ export function TopBar({ settings, editMode, onToggleEdit, onTheme }: { settings
 function ModuleStatus({ settings }: { settings: SettingsT }) {
   const focus = useFocusState();
   const now = useNow(30_000);
-  const pills: { key: string; icon: typeof Moon; label: string; href: string }[] = [];
+  const pills: { key: string; icon: LucideIcon; label: string; href: string }[] = [];
   if (settings.modules.scrollstop && focus.status !== 'idle') {
     pills.push({
       key: 'focus',
@@ -49,7 +49,6 @@ function ModuleStatus({ settings }: { settings: SettingsT }) {
   } else if (settings.modules.scrollstop && settings.scrollstop.alwaysOn) {
     pills.push({ key: 'block', icon: ShieldBan, label: 'Blocking on', href: 'settings.html#scrollstop' });
   }
-  if (settings.modules.nightshift && settings.nightshift.active) pills.push({ key: 'night', icon: Moon, label: 'NightShift', href: 'settings.html#nightshift' });
   return (
     <ul className="mr-1 hidden items-center gap-1.5 sm:flex" aria-label="Active modules">
       {pills.map((p) => (

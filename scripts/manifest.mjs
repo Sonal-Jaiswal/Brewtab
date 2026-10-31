@@ -13,7 +13,7 @@ export function createManifest({ e2e = false } = {}) {
     short_name: 'Brewtab',
     version: pkg.version,
     description:
-      'A calm, customisable new-tab dashboard with tasks, notes, focus blocking, site appearance controls and screenshots. Local-only.',
+      'A calm, customisable new-tab dashboard with tasks, notes, shortcuts and a focus timer that blocks distracting sites. Local-only.',
     minimum_chrome_version: '116',
     icons: {
       16: 'icons/icon-16.png',
@@ -29,20 +29,12 @@ export function createManifest({ e2e = false } = {}) {
       default_icon: { 16: 'icons/icon-16.png', 32: 'icons/icon-32.png', 48: 'icons/icon-48.png' },
     },
     background: { service_worker: 'service-worker.js', type: 'module' },
-    permissions: ['storage', 'alarms', 'declarativeNetRequest', 'activeTab', 'scripting', 'contextMenus', 'idle', 'notifications', 'search'],
+    permissions: ['storage', 'alarms', 'declarativeNetRequest', 'activeTab', 'contextMenus', 'idle', 'notifications', 'search'],
     optional_permissions: ['bookmarks'],
     optional_host_permissions: ['*://*/*'],
-    commands: {
-      'snap-visible': {
-        suggested_key: { default: 'Alt+Shift+S' },
-        description: 'SnapPage: capture the visible area',
-      },
-      'snap-region': {
-        suggested_key: { default: 'Alt+Shift+R' },
-        description: 'SnapPage: capture a selected region',
-      },
-    },
-    web_accessible_resources: [],
+    // Chrome refuses to redirect a link click on a website to an extension page
+    // unless the page is web accessible, and would show its own error instead.
+    web_accessible_resources: [{ resources: ['blocked.html'], matches: ['<all_urls>'] }],
     content_security_policy: {
       extension_pages: "script-src 'self'; object-src 'self'; img-src 'self' data: blob:",
     },
@@ -50,10 +42,8 @@ export function createManifest({ e2e = false } = {}) {
 
   if (e2e) {
     // E2E only: grant access to the local fixture server so tests can exercise
-    // redirect rules, usage tracking and NightShift without a permission dialog.
-    // <all_urls> stands in for the activeTab grant that a real toolbar click gives
-    // captureVisibleTab, which automated tests cannot perform.
-    manifest.host_permissions = ['http://localhost/*', 'http://127.0.0.1/*', '<all_urls>'];
+    // redirect rules and usage tracking without a permission dialog.
+    manifest.host_permissions = ['http://localhost/*', 'http://127.0.0.1/*'];
     manifest.name = 'Brewtab (E2E build)';
   }
   return manifest;

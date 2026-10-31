@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
-import { Blocks, Camera, Database, Info, KeyRound, LayoutGrid, Moon, Palette, Search, ShieldBan, SlidersHorizontal, type LucideIcon } from 'lucide-react';
+import { Database, Info, KeyRound, LayoutGrid, Palette, Search, ShieldBan, SlidersHorizontal, type LucideIcon } from 'lucide-react';
 import type { Settings } from '@/shared/types';
 import type { DeepPartial } from '@/shared/utils';
 import { useApplyTheme, useDebouncedCallback, useSettings } from '@/shared/hooks';
@@ -17,10 +17,7 @@ const SECTIONS: { id: string; label: string; icon: LucideIcon; component: React.
   { id: 'search', label: 'Search', icon: Search, component: lazy(() => import('./sections/SearchSection')) },
   { id: 'appearance', label: 'Appearance', icon: Palette, component: lazy(() => import('./sections/Appearance')) },
   { id: 'widgets', label: 'Dashboard', icon: LayoutGrid, component: lazy(() => import('./sections/Widgets')) },
-  { id: 'modules', label: 'Modules', icon: Blocks, component: lazy(() => import('./sections/Modules')) },
   { id: 'scrollstop', label: 'ScrollStop', icon: ShieldBan, component: lazy(() => import('./sections/ScrollStop')) },
-  { id: 'nightshift', label: 'NightShift', icon: Moon, component: lazy(() => import('./sections/NightShift')) },
-  { id: 'snappage', label: 'SnapPage', icon: Camera, component: lazy(() => import('./sections/SnapPageSection')) },
   { id: 'permissions', label: 'Permissions', icon: KeyRound, component: lazy(() => import('./sections/Permissions')) },
   { id: 'data', label: 'Data & backup', icon: Database, component: lazy(() => import('./sections/Data')) },
   { id: 'about', label: 'About & privacy', icon: Info, component: lazy(() => import('./sections/About')) },

@@ -42,6 +42,11 @@ export async function focusEnd(): Promise<FocusState> {
   return commit({ ...r, event: 'none' });
 }
 
+/** With ScrollStop off, a session can't block anything, so it shouldn't keep ticking. */
+export async function focusEndIfRunning(): Promise<void> {
+  if ((await getFocusState()).status !== 'idle') await focusEnd();
+}
+
 /** Alarm handler and startup recovery. */
 export async function focusAdvance(): Promise<FocusState> {
   const settings = await getSettings();

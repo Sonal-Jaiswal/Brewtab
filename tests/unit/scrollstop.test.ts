@@ -4,6 +4,7 @@ import { isScheduleActive, nextScheduleBoundary } from '@/modules/scrollstop/sch
 import { advanceFocus, endFocus, pauseFocus, remainingMs, resumeFocus, startFocus, isFocusBlocking } from '@/modules/scrollstop/focus';
 import { dailyTotals, exceededLimits, splitByDay, topSites } from '@/modules/scrollstop/usage';
 import { DEFAULT_SETTINGS } from '@/storage/chrome-storage/settings';
+import { isRestrictedUrl } from '@/shared/utils/url';
 import type { BlockRule, Schedule, ScrollStopSettings, UsageRecord } from '@/shared/types';
 
 const rule = (value: string, kind: BlockRule['kind'] = 'domain', enabled = true): BlockRule => ({ id: value, kind, value, enabled, createdAt: 0 });
@@ -222,5 +223,15 @@ describe('usage calculations', () => {
       { id: 'c', domain: 'youtube.com', minutes: 1, enabled: false },
     ];
     expect(exceededLimits(limits, today)).toEqual(['youtube.com']);
+  });
+});
+
+describe('restricted pages', () => {
+  it('recognises pages Chrome will not let extensions act on', () => {
+    for (const u of ['chrome://settings', 'chrome-extension://abc/page.html', 'https://chromewebstore.google.com/detail/x', 'https://chrome.google.com/webstore/x', 'about:blank', 'view-source:https://a.com', 'file:///tmp/a.html', undefined]) {
+      expect(isRestrictedUrl(u), String(u)).toBe(true);
+    }
+    expect(isRestrictedUrl('https://example.com')).toBe(false);
+    expect(isRestrictedUrl('https://chrome.google.com/search')).toBe(false);
   });
 });

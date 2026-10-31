@@ -1,8 +1,10 @@
 // Widget registry. To add a widget: create a component that accepts
 // WidgetProps, then add one entry here — the dashboard picks it up automatically.
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
-import { BarChart3, Bookmark, CheckSquare, LayoutGrid, Quote, StickyNote, Timer, type LucideIcon } from 'lucide-react';
+import { BarChart3, Bookmark, CheckSquare, Quote, StickyNote, Timer, type LucideIcon } from 'lucide-react';
 import type { ModuleId, Settings, WidgetInstance, WidgetType } from '@/shared/types';
+
+export const MODULE_NAMES: Record<ModuleId, string> = { scrollstop: 'ScrollStop' };
 
 export interface WidgetProps {
   instance: WidgetInstance;
@@ -80,13 +82,6 @@ export const WIDGETS: Record<WidgetType, WidgetDefinition> = {
     module: 'scrollstop',
     component: lazy(() => import('./UsageWidget')),
     settings: [{ key: 'count', label: 'Sites to show', type: 'number', min: 3, max: 10, default: 5 }],
-  },
-  modules: {
-    type: 'modules',
-    title: 'Modules',
-    description: 'Status and quick toggles for ScrollStop, NightShift and SnapPage.',
-    icon: LayoutGrid,
-    component: lazy(() => import('./ModulesWidget')),
   },
   bookmarks: {
     type: 'bookmarks',

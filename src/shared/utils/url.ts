@@ -16,7 +16,7 @@ const RESTRICTED_PREFIXES = [
 
 const RESTRICTED_HOSTS = ['chromewebstore.google.com', 'chrome.google.com'];
 
-/** True when Chrome forbids extensions from scripting or capturing the page. */
+/** True when Chrome forbids extensions from acting on the page. */
 export function isRestrictedUrl(url: string | undefined | null): boolean {
   if (!url) return true;
   const lower = url.toLowerCase();
@@ -28,13 +28,6 @@ export function isRestrictedUrl(url: string | undefined | null): boolean {
   } catch {
     return true;
   }
-}
-
-/** Captures are allowed on a few more pages than scripting (e.g. file://). */
-export function isCapturableUrl(url: string | undefined | null): boolean {
-  if (!url) return false;
-  if (url.startsWith('file://')) return true;
-  return !isRestrictedUrl(url);
 }
 
 /** Hostname of an http(s) URL without a leading "www.", or null. */

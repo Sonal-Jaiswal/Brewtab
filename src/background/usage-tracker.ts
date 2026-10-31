@@ -53,16 +53,20 @@ async function credit(domain: string, since: number, now: number): Promise<void>
   if (parts.length) await checkLimits();
 }
 
+/** Recomputed from scratch, so removing, turning off or raising a limit unblocks the site right away. */
 async function checkLimits(): Promise<void> {
   const settings = await getSettings();
   const limits = settings.scrollstop.limits.filter((l) => l.enabled);
-  if (!limits.length) return;
-  const today = dayKey();
-  const records = await usageRepo.forDate(today);
-  const exceeded = exceededLimits(limits, records);
   const state = await getLimitState();
-  const merged = [...new Set([...state.domains, ...exceeded])].sort();
-  if (merged.join() !== [...state.domains].sort().join()) await setLimitState({ date: today, domains: merged });
+  if (!limits.length && !state.domains.length) return;
+  const today = dayKey();
+  const exceeded = exceededLimits(limits, await usageRepo.forDate(today)).sort();
+  if (exceeded.join() !== [...state.domains].sort().join()) await setLimitState({ date: today, domains: exceeded });
+}
+
+/** Call when limits may have changed in settings. */
+export function recheckLimits(): Promise<void> {
+  return serial(checkLimits);
 }
 
 /** Re-evaluate what (if anything) is being tracked. Call on any relevant browser event. */

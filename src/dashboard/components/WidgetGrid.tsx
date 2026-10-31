@@ -8,7 +8,7 @@ import { dashboardRepo } from '@/storage/indexeddb/repos';
 import { onDataChange } from '@/shared/broadcast';
 import { Button, IconButton, Input, Select, Toggle, cx } from '@/shared/components/ui';
 import { Menu, Modal, useConfirm } from '@/shared/components/overlay';
-import { WIDGETS, widgetSetting, type WidgetDefinition } from '../widgets/registry';
+import { MODULE_NAMES, WIDGETS, widgetSetting, type WidgetDefinition } from '../widgets/registry';
 import { SIZE_PRESETS, WIDGET_TYPES, addWidget, defaultLayout, moveWidget, normalizeLayout, removeWidget, resizeWidget, updateWidgetSettings } from '../layout';
 
 export function useLayout() {
@@ -234,7 +234,7 @@ function AddWidgetDialog({ open, settings, layout, onClose, onAdd }: { open: boo
                 </span>
                 <span>
                   <span className="block text-sm font-medium">{def.title}</span>
-                  <span className="block text-[12.5px] text-muted">{moduleOff ? `Turn on ${def.module} to use this.` : present && !def.multiple ? 'Already on your dashboard.' : def.description}</span>
+                  <span className="block text-[12.5px] text-muted">{moduleOff ? `Turn on ${MODULE_NAMES[def.module!]} to use this.` : present && !def.multiple ? 'Already on your dashboard.' : def.description}</span>
                 </span>
               </button>
             </li>

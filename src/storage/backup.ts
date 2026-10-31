@@ -16,7 +16,6 @@ export interface MediaItem {
   id: string;
   createdAt: number;
   dataUrl: string;
-  meta?: Record<string, unknown>;
 }
 
 export interface BackupFile {
@@ -26,7 +25,7 @@ export interface BackupFile {
   appVersion: string;
   settings: Settings | null;
   data: Record<DataStore, unknown[]>;
-  media?: { wallpapers: MediaItem[]; captures: MediaItem[] };
+  media?: { wallpapers: MediaItem[] };
 }
 
 export interface BackupSummary {
@@ -73,12 +72,8 @@ export async function createBackup(options: { includeMedia?: boolean } = {}): Pr
   };
   if (options.includeMedia) {
     const wallpapers = await db.getAll('wallpapers');
-    const captures = await db.getAll('captures');
     file.media = {
       wallpapers: await Promise.all(wallpapers.map(async (w) => ({ id: w.id, createdAt: w.createdAt, dataUrl: await blobToDataUrl(w.blob) }))),
-      captures: await Promise.all(
-        captures.map(async ({ blob, ...meta }) => ({ id: meta.id, createdAt: meta.createdAt, dataUrl: await blobToDataUrl(blob), meta })),
-      ),
     };
   }
   return file;
@@ -131,7 +126,7 @@ export function parseBackup(text: string): ParseResult {
       (Array.isArray(list) ? list : []).filter(
         (m): m is MediaItem => isPlainObject(m) && str(m.id) && num(m.createdAt) && str(m.dataUrl) && (m.dataUrl as string).startsWith('data:image/'),
       );
-    media = { wallpapers: clean(raw.media.wallpapers), captures: clean(raw.media.captures) };
+    media = { wallpapers: clean(raw.media.wallpapers) };
   }
   const settings = isPlainObject(raw.settings) ? migrateSettings(raw.settings) : null;
   const backup: BackupFile = {
@@ -150,7 +145,7 @@ export function parseBackup(text: string): ParseResult {
       counts,
       invalid,
       hasSettings: settings !== null,
-      media: (media?.wallpapers.length ?? 0) + (media?.captures.length ?? 0),
+      media: media?.wallpapers.length ?? 0,
       exportedAt: backup.exportedAt,
     },
   };
@@ -195,7 +190,7 @@ export async function importBackup(backup: BackupFile, options: ImportOptions): 
     report.snapshotId = (await backupsRepo.add('Before replacing data with an import', JSON.stringify(snapshot))).id;
   }
 
-  const stores: StoreName[] = [...DATA_STORES, 'wallpapers', 'captures'];
+  const stores: StoreName[] = [...DATA_STORES, 'wallpapers'];
   const tx = db.transaction(stores, 'readwrite');
   for (const store of DATA_STORES) {
     const os = tx.objectStore(store);
@@ -232,23 +227,6 @@ export async function importBackup(backup: BackupFile, options: ImportOptions): 
       await tx.objectStore('wallpapers').put({ id: w.id, createdAt: w.createdAt, blob: dataUrlToBlob(w.dataUrl) });
       report.added++;
     }
-    for (const c of backup.media.captures) {
-      const meta = isPlainObject(c.meta) ? c.meta : {};
-      await tx.objectStore('captures').put({
-        url: '',
-        title: 'Imported capture',
-        kind: 'file',
-        width: 0,
-        height: 0,
-        crop: null,
-        note: null,
-        ...meta,
-        id: c.id,
-        createdAt: c.createdAt,
-        blob: dataUrlToBlob(c.dataUrl),
-      } as never);
-      report.added++;
-    }
   }
   await tx.done;
 
@@ -273,7 +251,7 @@ export async function restoreSnapshot(id: string): Promise<ImportReport> {
 /** Erase every piece of Brewtab data on this device. */
 export async function clearAllData(): Promise<void> {
   const db = await getDB();
-  const all: StoreName[] = [...DATA_STORES, 'captures', 'wallpapers', 'backups'];
+  const all: StoreName[] = [...DATA_STORES, 'wallpapers', 'backups'];
   const tx = db.transaction(all, 'readwrite');
   await Promise.all([...all.map((s) => tx.objectStore(s).clear()), tx.done]);
   await chrome.storage.local.clear();

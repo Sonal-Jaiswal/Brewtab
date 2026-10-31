@@ -3,7 +3,6 @@
 import { openDB, type DBSchema, type IDBPDatabase, type IDBPTransaction, type StoreNames } from 'idb';
 import type {
   BackupSnapshot,
-  CaptureRecord,
   FocusRecord,
   LayoutDoc,
   Note,
@@ -23,7 +22,6 @@ export interface BrewtabDB extends DBSchema {
   usage: { key: string; value: UsageRecord; indexes: { byDate: string; byDomain: string } };
   focusSessions: { key: string; value: FocusRecord; indexes: { byStarted: number } };
   dashboard: { key: string; value: LayoutDoc | QuickLinksDoc };
-  captures: { key: string; value: CaptureRecord; indexes: { byCreated: number } };
   wallpapers: { key: string; value: WallpaperRecord };
   backups: { key: string; value: BackupSnapshot; indexes: { byCreated: number } };
 }
@@ -46,7 +44,6 @@ const migrations: Record<number, Migration> = {
     usage.createIndex('byDomain', 'domain');
     db.createObjectStore('focusSessions', { keyPath: 'id' }).createIndex('byStarted', 'startedAt');
     db.createObjectStore('dashboard', { keyPath: 'id' });
-    db.createObjectStore('captures', { keyPath: 'id' }).createIndex('byCreated', 'createdAt');
     db.createObjectStore('wallpapers', { keyPath: 'id' });
     db.createObjectStore('backups', { keyPath: 'id' }).createIndex('byCreated', 'createdAt');
   },
@@ -54,7 +51,7 @@ const migrations: Record<number, Migration> = {
 
 /** Stores included in exports/imports. Binary stores are handled separately. */
 export const DATA_STORES = ['tasks', 'notes', 'usage', 'focusSessions', 'dashboard'] as const;
-export const MEDIA_STORES = ['captures', 'wallpapers'] as const;
+export const MEDIA_STORES = ['wallpapers'] as const;
 
 let dbPromise: Promise<IDBPDatabase<BrewtabDB>> | null = null;
 

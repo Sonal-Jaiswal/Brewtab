@@ -50,7 +50,7 @@ export default function Data(_: SectionProps) {
   return (
     <Page title="Data & backup" description="Everything Brewtab stores lives in this browser profile. Back it up, move it to another computer, or erase it.">
       <Panel title="Back up" description="Download a file with your settings, tasks, notes, shortcuts, layout, focus history and screen time.">
-        <SettingRow title="Include wallpapers and screenshots" description="Makes the file much larger.">
+        <SettingRow title="Include wallpapers" description="Makes the file much larger.">
           <Toggle label="Include media" checked={includeMedia} onChange={setIncludeMedia} />
         </SettingRow>
         <Button className="mt-3" variant="primary" icon={Download} onClick={() => void exportNow()}>
@@ -100,7 +100,7 @@ export default function Data(_: SectionProps) {
         {estimate && (
           <p className="text-[13px] text-muted">
             Brewtab is using about {(estimate.usage / 1024 / 1024).toFixed(1)} MB
-            {estimate.quota ? ` of ${(estimate.quota / 1024 / 1024 / 1024).toFixed(1)} GB available to it` : ''}. Screenshots and wallpapers take the most space.
+            {estimate.quota ? ` of ${(estimate.quota / 1024 / 1024 / 1024).toFixed(1)} GB available to it` : ''}. Wallpapers take the most space.
           </p>
         )}
       </Panel>
@@ -199,7 +199,7 @@ function ImportDialog({ pending, onClose }: { pending: { backup: BackupFile; sum
           </p>
         </div>
         {summary.hasSettings && (
-          <SettingRow title="Also import settings" description="Theme, modules, blocklists, schedules and preferences.">
+          <SettingRow title="Also import settings" description="Theme, blocklists, schedules and preferences.">
             <Toggle label="Import settings" checked={includeSettings} onChange={setIncludeSettings} />
           </SettingRow>
         )}
@@ -236,7 +236,7 @@ function ClearDialog({ open, onClose, onBackup }: { open: boolean; onClose: () =
         </>
       }
     >
-      <p className="text-sm text-muted">Tasks, notes, shortcuts, screenshots, wallpapers, history and settings will be permanently deleted from this device.</p>
+      <p className="text-sm text-muted">Tasks, notes, shortcuts, wallpapers, history and settings will be permanently deleted from this device.</p>
       <label className="mt-4 block space-y-1.5 text-sm">
         <span>
           Type <strong>DELETE</strong> to confirm

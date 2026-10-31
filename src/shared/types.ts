@@ -3,7 +3,7 @@
 export type ThemeId = 'minimal-light' | 'midnight' | 'nature' | 'glass';
 /** 'default' uses the search engine chosen in Chrome's own settings (chrome.search). */
 export type SearchProvider = 'default' | 'google' | 'bing' | 'duckduckgo' | 'custom';
-export type ModuleId = 'scrollstop' | 'nightshift' | 'snappage';
+export type ModuleId = 'scrollstop';
 export type Spacing = 'compact' | 'cozy' | 'roomy';
 export type DateFormat = 'long' | 'short' | 'iso' | 'weekday';
 
@@ -74,45 +74,6 @@ export interface ScrollStopSettings {
   blockedMessage: string;
 }
 
-export type FontFamilyChoice = 'default' | 'sans' | 'serif' | 'mono' | 'readable';
-
-export interface NightShiftPrefs {
-  dark: boolean;
-  /** percent, 50–150 */
-  brightness: number;
-  /** percent, 50–150 */
-  contrast: number;
-  /** percent, 0–100 */
-  sepia: number;
-  /** percent, 80–160 */
-  fontScale: number;
-  fontFamily: FontFamilyChoice;
-}
-
-export interface NightShiftSiteOverride {
-  disabled?: boolean;
-  prefs?: Partial<NightShiftPrefs>;
-}
-
-export interface NightShiftSettings {
-  /** Quick on/off switch (separate from module enable). */
-  active: boolean;
-  /** Apply automatically on every site (needs optional site access). */
-  autoApply: boolean;
-  /** Don't invert pages that are already dark. */
-  skipDarkSites: boolean;
-  global: NightShiftPrefs;
-  sites: Record<string, NightShiftSiteOverride>;
-  excluded: string[];
-  schedule: { enabled: boolean; start: string; end: string };
-}
-
-export interface SnapPageSettings {
-  defaultFormat: 'png' | 'jpeg';
-  jpegQuality: number;
-  keepRecent: number;
-}
-
 export interface Settings {
   version: number;
   onboarded: boolean;
@@ -129,8 +90,6 @@ export interface Settings {
   appearance: AppearanceSettings;
   modules: Record<ModuleId, boolean>;
   scrollstop: ScrollStopSettings;
-  nightshift: NightShiftSettings;
-  snappage: SnapPageSettings;
 }
 
 // ---------- IndexedDB records ----------
@@ -201,7 +160,7 @@ export interface QuickLinksDoc {
   folders: LinkFolder[];
 }
 
-export type WidgetType = 'tasks' | 'notes' | 'focus' | 'usage' | 'modules' | 'bookmarks' | 'quote';
+export type WidgetType = 'tasks' | 'notes' | 'focus' | 'usage' | 'bookmarks' | 'quote';
 
 export interface WidgetSize {
   /** column span, 1–3 */
@@ -221,21 +180,6 @@ export interface LayoutDoc {
   id: 'layout';
   widgets: WidgetInstance[];
   updatedAt: number;
-}
-
-export interface CaptureRecord {
-  id: string;
-  createdAt: number;
-  url: string;
-  title: string;
-  kind: 'visible' | 'region' | 'fullpage' | 'file';
-  width: number;
-  height: number;
-  /** Initial crop in image pixels (region capture). */
-  crop: { x: number; y: number; w: number; h: number } | null;
-  /** Full-page capture was cut short (page too tall / container scroll). */
-  note: string | null;
-  blob: Blob;
 }
 
 export interface WallpaperRecord {

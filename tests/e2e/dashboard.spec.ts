@@ -15,7 +15,7 @@ test.describe('fresh install & onboarding', () => {
     await dialog.getByRole('button', { name: 'Continue' }).click();
     await dialog.getByRole('button', { name: 'DuckDuckGo' }).click();
     await dialog.getByRole('button', { name: 'Continue' }).click();
-    await dialog.getByRole('switch', { name: 'Enable SnapPage' }).click();
+    await dialog.getByRole('switch', { name: 'Enable ScrollStop' }).click();
     await dialog.getByRole('button', { name: 'Continue' }).click();
     await dialog.getByRole('button', { name: 'Continue' }).click();
     await dialog.getByRole('button', { name: 'Start using Brewtab' }).click();
@@ -28,7 +28,7 @@ test.describe('fresh install & onboarding', () => {
     await expect(page.getByRole('button', { name: /Search engine: DuckDuckGo/ })).toBeVisible();
     await expect(page.getByRole('dialog', { name: 'Welcome to Brewtab' })).toHaveCount(0);
     const settings = (await sw.evaluate(async () => (await chrome.storage.local.get("settings")).settings)) as { modules: Record<string, boolean> };
-    expect(settings.modules.snappage).toBe(false);
+    expect(settings.modules.scrollstop).toBe(false);
   });
 
   test('onboarding can be skipped', async ({ context, extUrl }) => {
@@ -132,15 +132,15 @@ test.describe('widgets & layout', () => {
     const page = await openDashboard(context, sw, extUrl);
     const grid = page.getByTestId('widget-grid');
     const order = () => grid.locator('article').evaluateAll((els) => els.map((e) => e.getAttribute('data-widget')));
-    expect(await order()).toEqual(['tasks', 'focus', 'notes', 'quote', 'modules']);
+    expect(await order()).toEqual(['tasks', 'focus', 'notes', 'quote']);
 
     await page.getByRole('button', { name: 'Customise dashboard' }).click();
     await page.locator('[data-widget=quote]').getByRole('button', { name: 'Remove widget' }).click();
-    expect(await order()).toEqual(['tasks', 'focus', 'notes', 'modules']);
+    expect(await order()).toEqual(['tasks', 'focus', 'notes']);
 
     await page.getByRole('button', { name: 'Add widget' }).click();
     await page.getByRole('dialog', { name: 'Add a widget' }).getByRole('button', { name: /Screen time/ }).click();
-    expect(await order()).toEqual(['tasks', 'focus', 'notes', 'modules', 'usage']);
+    expect(await order()).toEqual(['tasks', 'focus', 'notes', 'usage']);
 
     // Keyboard drag-and-drop: move Focus one slot left, before Tasks.
     const handle = page.getByRole('button', { name: 'Move Focus widget' });
@@ -150,7 +150,7 @@ test.describe('widgets & layout', () => {
       await page.keyboard.press(key);
       await page.waitForTimeout(250);
     }
-    await expect.poll(order).toEqual(['focus', 'tasks', 'notes', 'modules', 'usage']);
+    await expect.poll(order).toEqual(['focus', 'tasks', 'notes', 'usage']);
 
     await page.locator('[data-widget=tasks]').getByRole('button', { name: 'Resize widget' }).click();
     await page.getByRole('menuitem', { name: 'Wide & tall' }).click();
@@ -159,19 +159,22 @@ test.describe('widgets & layout', () => {
 
     await page.getByRole('button', { name: 'Done' }).click();
     await page.reload();
-    expect(await order()).toEqual(['focus', 'tasks', 'notes', 'modules', 'usage']);
+    expect(await order()).toEqual(['focus', 'tasks', 'notes', 'usage']);
     await expect(page.locator('[data-widget=tasks]')).toHaveClass(/md:col-span-2/);
 
     await page.getByRole('button', { name: 'Customise dashboard' }).click();
     await page.getByRole('button', { name: 'Reset' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Reset' }).click();
-    expect(await order()).toEqual(['tasks', 'focus', 'notes', 'quote', 'modules']);
+    expect(await order()).toEqual(['tasks', 'focus', 'notes', 'quote']);
   });
 
   test('module-dependent widgets hide when the module is off', async ({ context, sw, extUrl }) => {
     const page = await openDashboard(context, sw, extUrl);
     await expect(page.locator('[data-widget=focus]')).toBeVisible();
-    await page.locator('[data-widget=modules]').getByRole('switch', { name: 'Enable ScrollStop' }).click();
+    const settings = await context.newPage();
+    await settings.goto(extUrl('settings.html#scrollstop'));
+    await settings.getByRole('switch', { name: 'Enable ScrollStop' }).click();
+    await page.bringToFront();
     await expect(page.locator('[data-widget=focus]')).toHaveCount(0);
   });
 });
@@ -228,6 +231,8 @@ test.describe('shortcuts', () => {
     await dialog.getByPlaceholder('example.com').fill('github.com');
     await dialog.getByRole('button', { name: 'Add shortcut' }).click();
     await expect(page.getByRole('link', { name: 'Github' })).toBeVisible();
+    // The link appears at once; the dialog closes only after the save is written.
+    await expect(dialog).toBeHidden();
 
     await page.getByRole('button', { name: 'Add shortcut' }).click();
     dialog = page.getByRole('dialog', { name: 'Add shortcut' });
@@ -240,6 +245,7 @@ test.describe('shortcuts', () => {
     dialog = page.getByRole('dialog', { name: 'Edit shortcut' });
     await dialog.getByPlaceholder('Leave blank to use the site name').fill('Code');
     await dialog.getByRole('button', { name: 'Save' }).click();
+    await expect(dialog).toBeHidden();
     await page.reload();
     await expect(page.getByRole('link', { name: 'Code' })).toBeVisible();
 
@@ -325,7 +331,7 @@ test.describe('robustness', () => {
 
   test('no console errors on extension pages', async ({ context, sw, extUrl }) => {
     await patchSettings(sw, { onboarded: true });
-    for (const p of ['newtab.html', 'popup.html', 'settings.html', 'snappage.html', 'blocked.html?reason=focus#https://x.com/']) {
+    for (const p of ['newtab.html', 'popup.html', 'settings.html', 'blocked.html?reason=focus#https://x.com/']) {
       const page = await context.newPage();
       const errors: string[] = [];
       page.on('pageerror', (e) => errors.push(String(e)));

@@ -16,11 +16,10 @@ export const OPTIONAL_PERMISSIONS: PermissionInfo[] = [
   {
     id: 'site-access',
     title: 'Site access',
-    why: 'Lets Brewtab read the address of the tab you are viewing and adjust pages. Nothing ever leaves your device.',
+    why: 'Lets Brewtab read the address of the tab you are viewing. Nothing ever leaves your device.',
     enables: [
       'ScrollStop: show the friendly blocked page instead of Chrome’s error page',
       'ScrollStop: track time spent per website and enforce daily limits',
-      'NightShift: apply your appearance settings automatically on every site',
     ],
     request: SITE_ACCESS,
   },

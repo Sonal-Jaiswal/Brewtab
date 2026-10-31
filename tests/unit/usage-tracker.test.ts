@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { flushTracking, refreshTracking, stopTracking } from '@/background/usage-tracker';
+import { flushTracking, recheckLimits, refreshTracking, stopTracking } from '@/background/usage-tracker';
 import { usageRepo } from '@/storage/indexeddb/repos';
 import { getLimitState, getSegment } from '@/storage/chrome-storage/runtime-state';
 import { updateSettings } from '@/storage/chrome-storage/settings';
@@ -92,5 +92,29 @@ describe('usage tracker', () => {
     advance(10);
     await flushTracking();
     expect((await getLimitState()).domains).toEqual(['youtube.com']);
+  });
+
+  it('unblocks a site as soon as its limit is raised, turned off or removed', async () => {
+    const limit = { id: 'l', domain: 'youtube.com', minutes: 1, enabled: true };
+    await usageRepo.add(dayKey(), 'youtube.com', 90);
+    await updateSettings({ scrollstop: { limits: [limit] } });
+    await recheckLimits();
+    expect((await getLimitState()).domains).toEqual(['youtube.com']);
+
+    await updateSettings({ scrollstop: { limits: [{ ...limit, minutes: 5 }] } });
+    await recheckLimits();
+    expect((await getLimitState()).domains).toEqual([]);
+
+    await updateSettings({ scrollstop: { limits: [limit] } });
+    await recheckLimits();
+    await updateSettings({ scrollstop: { limits: [{ ...limit, enabled: false }] } });
+    await recheckLimits();
+    expect((await getLimitState()).domains).toEqual([]);
+
+    await updateSettings({ scrollstop: { limits: [limit] } });
+    await recheckLimits();
+    await updateSettings({ scrollstop: { limits: [] } });
+    await recheckLimits();
+    expect((await getLimitState()).domains).toEqual([]);
   });
 });

@@ -1,13 +1,11 @@
 # Brewtab — Start every tab fresh
 
-Brewtab replaces Chrome's new tab page with a calm, customisable dashboard and adds three optional tools:
+Brewtab replaces Chrome's new tab page with a calm, customisable dashboard and a built-in focus tool:
 
-| Module | What it does |
+| Part | What it does |
 | --- | --- |
-| **Brewtab** (dashboard) | Clock & greeting, search, shortcuts with folders, and widgets for tasks, notes, focus, screen time, bookmarks, modules and a daily quote. Four themes plus custom wallpapers. |
-| **ScrollStop** | Blocks sites always, on schedules or during focus sessions; URL patterns and an allowlist; daily time limits; screen-time reports. |
-| **NightShift** | Dark mode, brightness, contrast, warmth, text size and typeface for any site; per-site settings, exclusions, a schedule and reading mode. |
-| **SnapPage** | Visible-area, region and full-page screenshots; crop, resize, blur, arrows, shapes, text and highlights; PNG/JPEG export and copy to clipboard. |
+| **Dashboard** | Clock & greeting, search, shortcuts with folders, and widgets for tasks, notes, focus, screen time, bookmarks and a daily quote. Four themes plus custom wallpapers. |
+| **ScrollStop** (optional) | Blocks sites always, on schedules or during focus sessions; URL patterns and an allowlist; daily time limits; screen-time reports. |
 
 Everything runs locally. There is no backend, account, analytics or AI service, and no remotely loaded code.
 
@@ -41,7 +39,7 @@ During development, `npm run dev` rebuilds on change; click the reload icon on `
 | `npm run test:e2e` | Builds `dist-e2e/` and runs Playwright end-to-end tests against the real extension in Chromium |
 | `npm run package` | Builds, checks (MV3, no host permissions, no test hooks, no eval or remote code) and writes `release/brewtab-<version>.zip` |
 | `npm run assets` | Regenerates icons and store promo tiles |
-| `npm run screenshots` | Captures screenshots of every surface into `store/screenshots/` (run `npm run build` and `npm run build:e2e` first) |
+| `npm run screenshots` | Captures screenshots of every surface into `store/screenshots/` (run `npm run build` first) |
 
 First-time E2E setup: `npx playwright install chromium`.
 
@@ -50,12 +48,9 @@ First-time E2E setup: `npx playwright install chromium`.
 ```text
 manifest      scripts/manifest.mjs (generated into dist/manifest.json)
 src/
-  background/   service worker: blocking sync, alarms, focus, usage tracking,
-                NightShift registration, SnapPage capture, context menus
-  content/      content scripts (IIFE): nightshift, reader, region, fullpage
+  background/   service worker: blocking sync, alarms, focus, usage tracking, context menu
   dashboard/    new tab page: components, widgets (registry), layout, logic
-  modules/      pure logic: scrollstop (rules, schedule, focus, usage), nightshift (engine)
-  snappage/     screenshot library and editor (state, render, UI)
+  modules/      pure logic: scrollstop (rules, schedule, focus, usage)
   popup/        toolbar popup
   settings/     settings page and sections
   blocked/      ScrollStop blocked page
@@ -83,3 +78,5 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for design decisions.
 ## Project history
 
 Development started on 31 October 2026. The git history reflects the actual order in which the work was done and committed.
+
+Two more modules, NightShift (site appearance and reading mode) and SnapPage (screenshots), were built and then removed before the first release, so that Brewtab has a single purpose for the Chrome Web Store. Their last version is at commit `f6f8062`, for publishing as separate extensions later.

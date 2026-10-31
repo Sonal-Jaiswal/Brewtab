@@ -1,7 +1,6 @@
 // Repositories: the only code that touches IndexedDB object stores directly.
 import type {
   BackupSnapshot,
-  CaptureRecord,
   FocusRecord,
   LayoutDoc,
   Note,
@@ -187,33 +186,6 @@ export const dashboardRepo = {
   async saveQuickLinks(doc: Omit<QuickLinksDoc, 'id'>): Promise<void> {
     await guardedWrite('shortcuts', async () => (await getDB()).put('dashboard', { id: 'quicklinks', ...doc }));
     notifyChange('dashboard');
-  },
-};
-
-// ---------- Captures (SnapPage) ----------
-
-export const capturesRepo = {
-  async add(rec: CaptureRecord, keepRecent: number): Promise<void> {
-    const db = await getDB();
-    await guardedWrite('screenshot', () => db.put('captures', rec));
-    // Prune the oldest captures beyond the retention limit.
-    const keys = await db.getAllKeysFromIndex('captures', 'byCreated');
-    const excess = keys.length - Math.max(1, keepRecent);
-    if (excess > 0) {
-      const tx = db.transaction('captures', 'readwrite');
-      await Promise.all([...keys.slice(0, excess).map((k) => tx.store.delete(k)), tx.done]);
-    }
-    notifyChange('captures');
-  },
-  async get(id: string): Promise<CaptureRecord | undefined> {
-    return (await getDB()).get('captures', id);
-  },
-  async list(): Promise<CaptureRecord[]> {
-    return (await (await getDB()).getAllFromIndex('captures', 'byCreated')).reverse();
-  },
-  async remove(id: string): Promise<void> {
-    await (await getDB()).delete('captures', id);
-    notifyChange('captures');
   },
 };
 

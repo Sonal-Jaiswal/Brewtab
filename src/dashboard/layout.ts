@@ -2,14 +2,13 @@
 import type { WidgetInstance, WidgetSize, WidgetType } from '@/shared/types';
 import { isPlainObject, uid } from '@/shared/utils';
 
-export const WIDGET_TYPES: WidgetType[] = ['tasks', 'notes', 'focus', 'usage', 'modules', 'bookmarks', 'quote'];
+export const WIDGET_TYPES: WidgetType[] = ['tasks', 'notes', 'focus', 'usage', 'bookmarks', 'quote'];
 
 export const DEFAULT_SIZES: Record<WidgetType, WidgetSize> = {
   tasks: { w: 1, h: 3 },
   notes: { w: 1, h: 3 },
   focus: { w: 1, h: 3 },
   usage: { w: 1, h: 3 },
-  modules: { w: 1, h: 2 },
   bookmarks: { w: 1, h: 3 },
   quote: { w: 2, h: 2 },
 };
@@ -19,7 +18,8 @@ export function createInstance(type: WidgetType, size: WidgetSize = DEFAULT_SIZE
 }
 
 export function defaultLayout(): WidgetInstance[] {
-  return (['tasks', 'focus', 'notes', 'quote', 'modules'] as WidgetType[]).map((t) => createInstance(t));
+  // The quote spans the full row under the three tall widgets.
+  return [createInstance('tasks'), createInstance('focus'), createInstance('notes'), createInstance('quote', { w: 3, h: 2 })];
 }
 
 export function addWidget(layout: WidgetInstance[], type: WidgetType): WidgetInstance[] {

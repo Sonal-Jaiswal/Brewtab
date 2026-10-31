@@ -1,19 +1,15 @@
 // Captures screenshots of every Brewtab surface with demo content, for review
 // and the Chrome Web Store listing (1280×800). Usage: npm run screenshots
-// Requires `npm run build` and `npm run build:e2e` first.
+// Requires `npm run build` first.
 import { chromium } from '@playwright/test';
 import { mkdirSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { spawn } from 'node:child_process';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const out = join(root, 'store', 'screenshots');
 mkdirSync(out, { recursive: true });
-
-const server = spawn(process.execPath, [join(root, 'tests/e2e/fixture-server.mjs')], { stdio: 'ignore' });
-await new Promise((r) => setTimeout(r, 600));
 
 const DAY = 86_400_000;
 const dayKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -50,7 +46,6 @@ async function seed(sw, page, theme = 'minimal-light') {
           ],
           limits: [{ id: 'l1', domain: 'youtube.com', minutes: 30, enabled: true }, { id: 'l2', domain: 'reddit.com', minutes: 15, enabled: true }],
         },
-        nightshift: { sites: { 'news.ycombinator.com': { prefs: { fontScale: 115 } }, 'docs.google.com': { disabled: true } }, excluded: ['mybank.com'] },
       },
     });
   }, theme);
@@ -168,95 +163,22 @@ async function shot(page, name, opts = {}) {
   await page.keyboard.press('Escape');
 
   const settings = await context.newPage();
-  for (const [id, name] of [['scrollstop', '06-settings-scrollstop'], ['nightshift', '07-settings-nightshift'], ['appearance', '08-settings-appearance'], ['data', '09-settings-data'], ['permissions', '10-settings-permissions']]) {
+  for (const [id, name] of [['scrollstop', '06-settings-scrollstop'], ['appearance', '07-settings-appearance'], ['data', '08-settings-data'], ['permissions', '09-settings-permissions']]) {
     await settings.goto(url(`settings.html#${id}`));
     await settings.getByRole('heading', { level: 1 }).waitFor();
     await shot(settings, name);
   }
   await settings.goto(url('settings.html#scrollstop'));
   await settings.getByRole('heading', { name: 'Reports' }).scrollIntoViewIfNeeded();
-  await shot(settings, '11-scrollstop-reports');
+  await shot(settings, '10-scrollstop-reports');
 
   const blocked = await context.newPage();
   await blocked.goto(url('blocked.html?reason=limit#https://www.youtube.com/'));
-  await shot(blocked, '12-blocked-page');
+  await shot(blocked, '11-blocked-page');
 
   const popup = await context.newPage();
   await popup.setViewportSize({ width: 360, height: 640 });
   await popup.goto(url('popup.html'));
-  await shot(popup, '13-popup', { fullPage: true });
-
-  const snap = await context.newPage();
-  await snap.goto(url('snappage.html'));
-  const img = await snap.evaluate(async () => {
-    const c = new OffscreenCanvas(1400, 860);
-    const x = c.getContext('2d');
-    x.fillStyle = '#f7f7f9';
-    x.fillRect(0, 0, 1400, 860);
-    x.fillStyle = '#1f2937';
-    x.fillRect(0, 0, 1400, 64);
-    x.fillStyle = '#fff';
-    x.font = '600 26px sans-serif';
-    x.fillText('Acme Analytics', 32, 42);
-    const bars = [320, 460, 380, 540, 610, 480, 700];
-    bars.forEach((h, i) => {
-      x.fillStyle = '#6366f1';
-      x.fillRect(120 + i * 150, 800 - h, 90, h);
-    });
-    x.fillStyle = '#111827';
-    x.font = '600 34px sans-serif';
-    x.fillText('Weekly signups', 120, 130);
-    x.font = '24px sans-serif';
-    x.fillStyle = '#6b7280';
-    x.fillText('api_key: sk_live_9f8a7b6c5d4e3f2a1b', 120, 172);
-    return [...new Uint8Array(await (await c.convertToBlob()).arrayBuffer())];
-  });
-  await snap.locator('input[type=file]').setInputFiles({ name: 'Acme Analytics dashboard', mimeType: 'image/png', buffer: Buffer.from(img) });
-  const canvas = snap.getByTestId('editor-canvas');
-  await canvas.waitFor();
-  await snap.waitForTimeout(400);
-  const b = await canvas.boundingBox();
-  const at = (fx, fy) => [b.x + b.width * fx, b.y + b.height * fy];
-  const drag = async (tool, a, c) => {
-    await snap.getByRole('button', { name: tool }).click();
-    await snap.mouse.move(...a);
-    await snap.mouse.down();
-    await snap.mouse.move(...c, { steps: 6 });
-    await snap.mouse.up();
-  };
-  await drag(/Blur/, at(0.08, 0.17), at(0.42, 0.22));
-  await drag(/Rectangle/, at(0.62, 0.15), at(0.97, 0.97));
-  await drag(/^Arrow/, at(0.45, 0.45), at(0.6, 0.32));
-  await drag(/Highlight/, at(0.08, 0.12), at(0.3, 0.165));
-  await snap.getByRole('button', { name: /^Text/ }).click();
-  await snap.mouse.click(...at(0.3, 0.48));
-  await snap.getByLabel('Annotation text').fill('Best week yet!');
-  await snap.getByLabel('Annotation text').press('Enter');
-  await snap.getByRole('button', { name: /Select & move/ }).click();
-  await shot(snap, '14-snappage-editor');
-  await snap.getByRole('button', { name: 'Back to library' }).click();
-  await shot(snap, '15-snappage-library');
+  await shot(popup, '12-popup', { fullPage: true });
   await context.close();
 }
-
-// ---------- E2E build (site access granted) for NightShift on a real page ----------
-{
-  const { context, sw } = await launch('dist-e2e');
-  const page = await context.newPage();
-  await page.goto('http://localhost:4599/an-article');
-  await shot(page, '16-website-before-nightshift');
-  await sw.evaluate(async () => {
-    await chrome.storage.local.set({ settings: { onboarded: true, nightshift: { active: true, autoApply: true, global: { dark: true, brightness: 100, contrast: 100, sepia: 10, fontScale: 100, fontFamily: 'default' } } } });
-    await globalThis.brewtabTest.syncNightShift();
-  });
-  await page.reload();
-  await shot(page, '17-website-nightshift-dark');
-  await sw.evaluate(async (tabUrl) => {
-    const [tab] = await chrome.tabs.query({ url: tabUrl });
-    await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content/reader.js'] });
-  }, 'http://localhost:4599/an-article');
-  await shot(page, '18-website-reading-mode');
-  await context.close();
-}
-
-server.kill();

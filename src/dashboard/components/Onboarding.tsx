@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, HardDrive, Lock, ShieldCheck } from 'lucide-react';
-import type { ModuleId, SearchProvider, Settings, ThemeId } from '@/shared/types';
+import { ArrowLeft, ArrowRight, Check, HardDrive, Lock, ShieldBan, ShieldCheck } from 'lucide-react';
+import type { SearchProvider, Settings, ThemeId } from '@/shared/types';
 import type { DeepPartial } from '@/shared/utils';
 import { Button, Input, Toggle, cx } from '@/shared/components/ui';
 import { BrandGlyph } from '@/shared/components/Brand';
@@ -8,12 +8,11 @@ import { SITE_ACCESS, requestPermission } from '@/shared/permissions';
 import { usePermission } from '@/shared/hooks';
 import { dashboardRepo } from '@/storage/indexeddb/repos';
 import { THEMES } from './TopBar';
-import { MODULE_META } from '../widgets/ModulesWidget';
 import { providerName } from '../format';
 import { SUGGESTED_SITES, addLink, EMPTY_LINKS, findDuplicate } from '../quicklinks';
 import { LinkAvatar } from './LinkAvatar';
 
-const STEPS = ['Welcome', 'Look', 'Search', 'Modules', 'Shortcuts', 'Privacy'] as const;
+const STEPS = ['Welcome', 'Look', 'Search', 'Focus', 'Shortcuts', 'Privacy'] as const;
 
 export default function Onboarding({ settings, update }: { settings: Settings; update: (p: DeepPartial<Settings>) => Promise<Settings> }) {
   const [step, setStep] = useState(0);
@@ -57,7 +56,7 @@ export default function Onboarding({ settings, update }: { settings: Settings; u
               <div>
                 <h1 className="font-display text-[30px] leading-tight font-medium tracking-[-0.02em]">Start every tab fresh.</h1>
                 <p className="mt-2 text-[14.5px] text-muted">
-                  Brewtab turns your new tab into a calm dashboard for tasks, notes and focus, with optional tools for blocking distractions, darkening sites and capturing screenshots.
+                  Brewtab turns your new tab into a calm dashboard for tasks, notes and focus, and can block distracting sites while you work.
                 </p>
               </div>
               <label className="block space-y-1.5">
@@ -103,30 +102,23 @@ export default function Onboarding({ settings, update }: { settings: Settings; u
 
           {step === 3 && (
             <div>
-              <StepTitle title="Turn on the tools you want" sub="Each module can be switched off at any time." />
-              <ul className="space-y-2">
-                {(Object.keys(MODULE_META) as ModuleId[]).map((id) => {
-                  const m = MODULE_META[id];
-                  return (
-                    <li key={id} className="flex items-center gap-3 rounded-card border border-line px-3.5 py-3">
-                      <span className="grid h-9 w-9 place-items-center rounded-ctl bg-accent-soft text-accent">
-                        <m.icon size={17} aria-hidden />
-                      </span>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium">{m.name}</div>
-                        <div className="text-[12.5px] text-muted">{m.blurb}</div>
-                      </div>
-                      <Toggle label={`Enable ${m.name}`} checked={settings.modules[id]} onChange={(v) => void update({ modules: { [id]: v } })} />
-                    </li>
-                  );
-                })}
-              </ul>
+              <StepTitle title="Block distractions" sub="ScrollStop blocks the sites you choose during focus sessions, on a schedule or all the time. You can turn it off at any time." />
+              <div className="flex items-center gap-3 rounded-card border border-line px-3.5 py-3">
+                <span className="grid h-9 w-9 place-items-center rounded-ctl bg-accent-soft text-accent">
+                  <ShieldBan size={17} aria-hidden />
+                </span>
+                <div className="flex-1">
+                  <div className="text-sm font-medium">ScrollStop</div>
+                  <div className="text-[12.5px] text-muted">Blocking, focus & screen time</div>
+                </div>
+                <Toggle label="Enable ScrollStop" checked={settings.modules.scrollstop} onChange={(v) => void update({ modules: { scrollstop: v } })} />
+              </div>
               <div className="mt-4 rounded-card bg-subtle p-3.5 text-[13px]">
                 <div className="flex items-center gap-2 font-medium">
                   <ShieldCheck size={15} className="text-accent" aria-hidden /> Optional: site access
                 </div>
                 <p className="mt-1 text-muted">
-                  Without it, blocking uses Chrome’s standard block page and NightShift works when you click the toolbar icon. With it, Brewtab can show its own blocked page, track screen time and apply NightShift automatically.
+                  Without it, blocking uses Chrome’s standard block page. With it, Brewtab can show its own blocked page and track screen time.
                 </p>
                 {siteAccess ? (
                   <p className="mt-2 flex items-center gap-1.5 font-medium text-success">
@@ -175,7 +167,7 @@ export default function Onboarding({ settings, update }: { settings: Settings; u
               <StepTitle title="Your data stays here" sub="Brewtab has no servers, no accounts and no analytics." />
               <ul className="space-y-3 text-[13.5px]">
                 <Bullet icon={HardDrive} title="Stored on this device">
-                  Tasks, notes, shortcuts, screen-time totals, focus history and screenshots live in your browser’s local storage.
+                  Tasks, notes, shortcuts, screen-time totals and focus history live in your browser’s local storage.
                 </Bullet>
                 <Bullet icon={Lock} title="Never uploaded">
                   Nothing is sent anywhere. Search queries go directly to your search engine.

@@ -1,6 +1,6 @@
 // Cross-context change notifications for IndexedDB data (new tabs, popup,
 // settings page and the service worker all share the same database).
-export type DataTopic = 'tasks' | 'notes' | 'usage' | 'focusSessions' | 'dashboard' | 'captures' | 'wallpapers' | 'backups' | 'all';
+export type DataTopic = 'tasks' | 'notes' | 'usage' | 'focusSessions' | 'dashboard' | 'wallpapers' | 'backups' | 'all';
 
 const CHANNEL = 'brewtab-data';
 let channel: BroadcastChannel | null = null;

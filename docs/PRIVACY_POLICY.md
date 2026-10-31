@@ -14,11 +14,10 @@ Brewtab is a browser extension that runs entirely on your device. It has no serv
 
 | Data | Purpose | Where |
 | --- | --- | --- |
-| Settings (name, theme, modules, search choice, blocklists, schedules, limits, NightShift preferences) | Personalise Brewtab | `chrome.storage.local` |
+| Settings (name, theme, search choice, blocklists, schedules, limits) | Personalise Brewtab | `chrome.storage.local` |
 | Tasks, notes, shortcuts, dashboard layout | Dashboard features | IndexedDB |
 | Screen time: seconds per website domain per day, kept for 90 days | ScrollStop reports and daily limits | IndexedDB |
 | Focus session history (start/end times, focused minutes) | Focus reports | IndexedDB |
-| Screenshots you capture or open (your last 20 by default) | SnapPage editor and library | IndexedDB |
 | Wallpapers you upload (compressed) | Dashboard background | IndexedDB |
 | Automatic safety copies made before an import replaces your data (last 3) | Undo for imports | IndexedDB |
 
@@ -26,7 +25,7 @@ Screen time is recorded only if you enable ScrollStop usage tracking **and** gra
 
 ## Website content
 
-NightShift and reading mode change how pages look by adding CSS, and reading mode reformats the article you're viewing. SnapPage captures an image of the tab only when you ask it to. None of this content is stored except screenshots you choose to keep, and none of it leaves your device.
+Brewtab never reads, changes or stores the content of the websites you visit. When ScrollStop blocks a site, Chrome shows Brewtab's blocked page (or its own block page) instead of the site. The blocked site's address is passed only to that local page, so it can show which site was blocked and offer a way back.
 
 ## Network activity
 

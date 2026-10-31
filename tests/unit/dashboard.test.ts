@@ -11,13 +11,14 @@ import type { Note, Task } from '@/shared/types';
 describe('widget layout', () => {
   it('adds, removes, reorders, resizes and configures widgets', () => {
     let l = defaultLayout();
-    expect(l.map((w) => w.type)).toEqual(['tasks', 'focus', 'notes', 'quote', 'modules']);
+    expect(l.map((w) => w.type)).toEqual(['tasks', 'focus', 'notes', 'quote']);
+    expect(l[3].size).toEqual({ w: 3, h: 2 });
     l = addWidget(l, 'usage');
     expect(l.at(-1)?.type).toBe('usage');
     l = removeWidget(l, l[3].id);
-    expect(l.map((w) => w.type)).toEqual(['tasks', 'focus', 'notes', 'modules', 'usage']);
-    l = moveWidget(l, l[4].id, l[0].id);
-    expect(l.map((w) => w.type)).toEqual(['usage', 'tasks', 'focus', 'notes', 'modules']);
+    expect(l.map((w) => w.type)).toEqual(['tasks', 'focus', 'notes', 'usage']);
+    l = moveWidget(l, l[3].id, l[0].id);
+    expect(l.map((w) => w.type)).toEqual(['usage', 'tasks', 'focus', 'notes']);
     l = resizeWidget(l, l[0].id, { w: 3, h: 4 });
     expect(l[0].size).toEqual({ w: 3, h: 4 });
     l = updateWidgetSettings(l, l[0].id, { count: 7 });

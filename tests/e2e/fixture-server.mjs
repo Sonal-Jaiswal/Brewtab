@@ -10,10 +10,7 @@ ${Array.from({ length: 12 }, (_, i) => `<p>Paragraph ${i + 1}. Brewtab test cont
 <script>setTimeout(()=>{const d=document.createElement('div');d.id='late';d.textContent='Loaded later';document.querySelector('main').appendChild(d)},300)</script>
 </body></html>`;
 
-const dark = `<!doctype html><html><head><title>Dark site</title></head><body style="background:#111;color:#eee"><p>Already dark</p></body></html>`;
-
 createServer((req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  if (req.url?.startsWith('/dark')) return res.end(dark);
   res.end(article(req.url === '/' ? 'Fixture home' : `Fixture ${req.url}`));
 }).listen(4599, () => console.log('fixture server on http://localhost:4599'));

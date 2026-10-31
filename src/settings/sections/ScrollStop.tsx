@@ -20,16 +20,11 @@ export default function ScrollStop({ settings, update }: SectionProps) {
 
   return (
     <Page title="ScrollStop" description="Block distracting sites always, on a schedule, or while you focus, and see where your browsing time goes.">
-      {!enabled && (
-        <Panel>
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-sm text-muted">ScrollStop is turned off. Nothing is blocked or tracked.</p>
-            <Button variant="primary" onClick={() => void update({ modules: { scrollstop: true } })}>
-              Turn on ScrollStop
-            </Button>
-          </div>
-        </Panel>
-      )}
+      <Panel>
+        <SettingRow title="Turn on ScrollStop" description={enabled ? 'Blocking, focus sessions and screen time are active.' : 'ScrollStop is turned off. Nothing is blocked or tracked.'}>
+          <Toggle label="Enable ScrollStop" checked={enabled} onChange={(v) => void update({ modules: { scrollstop: v } })} />
+        </SettingRow>
+      </Panel>
 
       <Panel title="Blocking">
         <SettingRow title="Block all the time" description="When off, sites are blocked only during focus sessions and schedules.">
@@ -188,7 +183,12 @@ function Schedules({ settings, update }: SectionProps) {
 
 function ScheduleEditor({ schedule, onClose, onSave }: { schedule: Schedule | null; onClose: () => void; onSave: (s: Schedule) => void }) {
   const [draft, setDraft] = useState<Schedule | null>(schedule);
-  if (schedule && draft?.id !== schedule.id) setDraft(schedule);
+  // Start from the saved schedule every time the editor opens, so cancelled edits don't come back.
+  const [opened, setOpened] = useState<Schedule | null>(schedule);
+  if (schedule !== opened) {
+    setOpened(schedule);
+    setDraft(schedule);
+  }
   if (!schedule || !draft) return null;
   const valid = isValidSchedule(draft) && draft.name.trim();
   return (

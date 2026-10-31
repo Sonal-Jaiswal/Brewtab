@@ -1,17 +1,12 @@
 // Typed messages between extension pages / content scripts and the service worker.
 import type { FocusState } from './types';
 
-export type CaptureMode = 'visible' | 'region' | 'fullpage';
-
 export type Message =
   | { type: 'focus:start'; minutes?: number }
   | { type: 'focus:pause' }
   | { type: 'focus:resume' }
   | { type: 'focus:end' }
   | { type: 'scrollstop:sync' }
-  | { type: 'snap:capture'; mode: CaptureMode; tabId: number; windowId: number }
-  | { type: 'snap:region-selected'; rect: { x: number; y: number; w: number; h: number }; viewportWidth: number }
-  | { type: 'snap:region-cancel' }
   | { type: 'status:get' };
 
 export interface StatusResponse {

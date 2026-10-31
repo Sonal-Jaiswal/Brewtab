@@ -1,6 +1,6 @@
 import { RotateCcw } from 'lucide-react';
 import { useLayout } from '@/dashboard/components/WidgetGrid';
-import { WIDGETS } from '@/dashboard/widgets/registry';
+import { MODULE_NAMES, WIDGETS } from '@/dashboard/widgets/registry';
 import { WIDGET_TYPES, addWidget, defaultLayout } from '@/dashboard/layout';
 import { Button, SettingRow, Toggle } from '@/shared/components/ui';
 import { useConfirm } from '@/shared/components/overlay';
@@ -33,7 +33,7 @@ export default function Widgets({ settings }: SectionProps) {
           const on = layout.some((w) => w.type === t);
           const moduleOff = def.module && !settings.modules[def.module];
           return (
-            <SettingRow key={t} title={def.title} description={moduleOff ? `Hidden while ${def.module} is turned off.` : def.description}>
+            <SettingRow key={t} title={def.title} description={moduleOff ? `Hidden while ${MODULE_NAMES[def.module!]} is turned off.` : def.description}>
               <Toggle label={`Show ${def.title} widget`} checked={on} onChange={(v) => save(v ? addWidget(layout, t) : layout.filter((w) => w.type !== t))} />
             </SettingRow>
           );

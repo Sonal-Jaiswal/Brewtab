@@ -51,7 +51,6 @@ export function createChromeMock() {
   let dynamicRules: chrome.declarativeNetRequest.Rule[] = [];
   const granted = { permissions: new Set<string>(), origins: new Set<string>() };
   const alarms = new Map<string, chrome.alarms.Alarm>();
-  const registered: chrome.scripting.RegisteredContentScript[] = [];
 
   const mock = {
     storage: {
@@ -104,19 +103,9 @@ export function createChromeMock() {
       clear: async (name: string) => alarms.delete(name),
       onAlarm: event(),
     },
-    scripting: {
-      getRegisteredContentScripts: async () => structuredClone(registered),
-      registerContentScripts: async (scripts: chrome.scripting.RegisteredContentScript[]) => {
-        registered.push(...scripts);
-      },
-      unregisterContentScripts: async (filter?: { ids?: string[] }) => {
-        for (let i = registered.length - 1; i >= 0; i--) if (!filter?.ids || filter.ids.includes(registered[i].id)) registered.splice(i, 1);
-      },
-    },
     action: { setBadgeText: async () => undefined, setBadgeBackgroundColor: async () => undefined },
     _granted: granted,
     _alarms: alarms,
-    _registered: registered,
   };
   return mock;
 }
